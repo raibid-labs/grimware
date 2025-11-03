@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::window::{CursorGrabMode, PrimaryWindow};
 
 #[cfg(feature = "brp")]
 use bevy_brp_extras::BrpExtrasPlugin;
@@ -34,8 +35,19 @@ fn main() {
         info!("💡 Try querying entities, modifying transforms, or spawning objects!");
     }
 
-    app.add_systems(Startup, setup)
-    .add_systems(Update, (rotate_cubes, camera_controller, update_instructions, bounce_green_cube))
+    app.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 500.0,  // Add bright ambient light
+        affects_lightmapped_meshes: false,
+    })
+    .add_systems(Startup, setup)
+    .add_systems(Update, (
+        toggle_cursor_grab,
+        rotate_cubes,
+        camera_controller,
+        update_instructions,
+        bounce_green_cube
+    ))
     .run();
 }
 
@@ -198,7 +210,7 @@ fn setup(
 
     // Instructions text
     commands.spawn((
-        Text::new("BRP Demo | WASD: Move | Mouse: Look | Shift: Down | Space: Up"),
+        Text::new("BRP Demo | Press C to grab cursor | WASD: Move | Mouse: Look | ESC: Release | Space: Up | Shift: Down"),
         Node {
             position_type: PositionType::Absolute,
             top: Val::Px(10.0),
@@ -221,12 +233,35 @@ fn rotate_cubes(time: Res<Time>, mut query: Query<(&mut Transform, &RotatingCube
     }
 }
 
+fn toggle_cursor_grab(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
+) {
+    if let Ok(mut window) = primary_window.single_mut() {
+        if keys.just_pressed(KeyCode::Escape) {
+            // Release cursor
+            window.cursor_options.grab_mode = CursorGrabMode::None;
+            window.cursor_options.visible = true;
+        }
+        if keys.just_pressed(KeyCode::KeyC) {
+            // Grab cursor for mouse look
+            window.cursor_options.grab_mode = CursorGrabMode::Confined;
+            window.cursor_options.visible = false;
+        }
+    }
+}
+
 fn camera_controller(
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
     mut mouse_motion: EventReader<bevy::input::mouse::MouseMotion>,
     mut query: Query<(&mut Transform, &CameraController), With<Camera3d>>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
 ) {
+    let Ok(window) = primary_window.single() else {
+        return;
+    };
+
     for (mut transform, controller) in &mut query {
         let mut velocity = Vec3::ZERO;
         let forward = transform.forward();
@@ -258,15 +293,17 @@ fn camera_controller(
             transform.translation += velocity * controller.move_speed * time.delta_secs();
         }
 
-        // Mouse look (when mouse moves)
-        for mouse_event in mouse_motion.read() {
-            let delta = mouse_event.delta;
-            let yaw = -delta.x * controller.look_speed * time.delta_secs();
-            let pitch = -delta.y * controller.look_speed * time.delta_secs();
+        // Mouse look (only when cursor is grabbed)
+        if window.cursor_options.grab_mode != CursorGrabMode::None {
+            for mouse_event in mouse_motion.read() {
+                let delta = mouse_event.delta;
+                let yaw = -delta.x * 0.003;  // More direct control
+                let pitch = -delta.y * 0.003;
 
-            // Rotate camera
-            transform.rotate_y(yaw);
-            transform.rotate_local_x(pitch);
+                // Rotate camera
+                transform.rotate_y(yaw);
+                transform.rotate_local_x(pitch);
+            }
         }
     }
 }
