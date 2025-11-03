@@ -31,18 +31,25 @@ cd bevy-mcp-ref
 
 # Run the game with BRP enabled
 cargo run --features brp
+
+# OR use the justfile for convenience (if you have just installed)
+just demo
 ```
 
 The game will start with BRP listening on `localhost:15702`.
+
+**💡 Tip:** This project includes a `justfile` with convenient commands. Install [just](https://github.com/casey/just) and run `just` to see all available commands.
 
 ### Running Examples
 
 ```bash
 # Basic scene without BRP
 cargo run --example basic_scene
+# OR: just example-basic
 
 # Interactive BRP demo
 cargo run --example brp_demo --features brp
+# OR: just demo
 ```
 
 ## 🤖 AI-Assisted Development
@@ -105,17 +112,41 @@ bevy-mcp-ref/
 
 ## 🔧 Development
 
+### Quick Commands with justfile
+
+This project includes a [justfile](https://github.com/casey/just) for convenient development commands:
+
+```bash
+# See all available commands
+just
+
+# Run the interactive demo
+just demo
+
+# Run with auto-reload on file changes
+just watch-demo
+
+# Full quality check (format, lint, test, build)
+just check-all
+
+# Production build with all checks
+just prod
+```
+
 ### Building
 
 ```bash
 # Debug build (with dynamic linking for faster compile)
 cargo build
+# OR: just build
 
 # Debug build with BRP
 cargo build --features brp
+# OR: just build-brp
 
 # Release build
 cargo build --release --features brp
+# OR: just build-release
 ```
 
 ### Testing
@@ -123,9 +154,11 @@ cargo build --release --features brp
 ```bash
 # Run tests
 cargo test
+# OR: just test
 
 # Check code
 cargo check --all-features
+# OR: just check
 ```
 
 ### Linting
@@ -133,9 +166,11 @@ cargo check --all-features
 ```bash
 # Format code
 cargo fmt
+# OR: just fmt
 
 # Lint
 cargo clippy --all-features
+# OR: just lint
 ```
 
 ## 🎨 Examples Gallery
