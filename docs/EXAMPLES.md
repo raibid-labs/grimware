@@ -8,9 +8,98 @@ Ensure your game is running with BRP enabled:
 
 ```bash
 cargo run --features brp
+# OR run the interactive demo:
+cargo run --example brp_demo --features brp
 ```
 
-## Example 1: Basic Scene Setup
+## Example 1: Modifying the Green Sphere's Bounce (Using BRP Demo)
+
+### Goal
+Use live BRP mutation to modify the green sphere's bounce height while the game is running - no recompilation needed!
+
+### Steps
+
+1. **Launch the BRP demo:**
+```bash
+cargo run --example brp_demo --features brp
+```
+
+2. **Find the green sphere entity:**
+
+Ask Claude Code: "Show me all entities with the BouncingCube component"
+
+Or use direct query:
+```javascript
+mcp__brp__bevy_query({
+  data: { components: ["brp_demo::BouncingCube", "bevy_core::name::Name"] },
+  filter: { with: ["brp_demo::BouncingCube"] }
+})
+```
+
+Response will show entity ID (e.g., 4294967322) and current values:
+```json
+{
+  "bevy_core::name::Name": "Green Sphere",
+  "brp_demo::BouncingCube": {
+    "base_height": 0.5,
+    "height": 5.0,
+    "speed": 2.0
+  }
+}
+```
+
+3. **Make it jump higher (live editing):**
+
+Ask Claude Code: "Make the green sphere jump twice as high"
+
+Or use direct mutation:
+```javascript
+mcp__brp__brp_execute({
+  method: "bevy/mutate_component",
+  params: {
+    entity: 4294967322,
+    component: "brp_demo::BouncingCube",
+    path: ".height",
+    value: 10
+  }
+})
+```
+
+4. **Watch the change happen instantly:**
+The sphere immediately starts jumping higher! No restart needed.
+
+5. **Experiment with different values:**
+```javascript
+// Make it super dramatic
+mcp__brp__brp_execute({
+  method: "bevy/mutate_component",
+  params: {
+    entity: 4294967322,
+    component: "brp_demo::BouncingCube",
+    path: ".height",
+    value: 15
+  }
+})
+
+// Slow it down for cinematic effect
+mcp__brp__brp_execute({
+  method: "bevy/mutate_component",
+  params: {
+    entity: 4294967322,
+    component: "brp_demo::BouncingCube",
+    path: ".speed",
+    value: 1.0
+  }
+})
+```
+
+6. **When you find values you like, update the code:**
+Once you've experimented and found the perfect bounce, update `examples/brp_demo.rs` with those values and commit.
+
+### Key Takeaway
+This demonstrates the power of AI-assisted game development: **test ideas instantly, iterate rapidly, finalize working code.**
+
+## Example 2: Basic Scene Setup
 
 ### Goal
 Create a simple 3D scene with a cube, light, and camera using MCP tools.
