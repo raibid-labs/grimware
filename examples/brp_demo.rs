@@ -63,26 +63,26 @@ fn setup(
 ) {
     info!("Setting up BRP demo scene...");
 
-    // Spawn multiple cubes with different colors and speeds
-    let cube_configs = [
-        (Vec3::new(-3.0, 0.5, 0.0), Color::srgb(0.8, 0.2, 0.2), 0.5, "Red Cube"),
-        (Vec3::new(0.0, 0.5, 0.0), Color::srgb(0.2, 0.8, 0.2), 1.0, "Green Cube"),
-        (Vec3::new(3.0, 0.5, 0.0), Color::srgb(0.2, 0.2, 0.8), 1.5, "Blue Cube"),
+    // Spawn multiple spheres with different colors and speeds
+    let sphere_configs = [
+        (Vec3::new(-3.0, 0.5, 0.0), Color::srgb(0.8, 0.2, 0.2), 0.5, "Red Sphere"),
+        (Vec3::new(0.0, 0.5, 0.0), Color::srgb(0.2, 0.8, 0.2), 1.0, "Green Sphere"),
+        (Vec3::new(3.0, 0.5, 0.0), Color::srgb(0.2, 0.2, 0.8), 1.5, "Blue Sphere"),
     ];
 
-    for (pos, color, speed, name) in cube_configs.iter() {
+    for (pos, color, speed, name) in sphere_configs.iter() {
         let mut entity = commands.spawn((
-            Mesh3d(meshes.add(Cuboid::default())),
+            Mesh3d(meshes.add(Sphere::new(0.5))),
             MeshMaterial3d(materials.add(*color)),
             Transform::from_translation(*pos),
             RotatingCube { speed: *speed },
             Name::new(*name),
         ));
 
-        // Add bouncing component to green cube
-        if *name == "Green Cube" {
+        // Add bouncing component to green sphere
+        if *name == "Green Sphere" {
             entity.insert(BouncingCube {
-                height: 5.0,  // Jump high enough to clear the blue cube!
+                height: 5.0,  // Jump high enough to clear the blue sphere!
                 speed: 2.0,   // Slower for dramatic effect
                 base_height: 0.5,
             });
@@ -91,10 +91,50 @@ fn setup(
         info!("Spawned: {}", name);
     }
 
-    // Spawn ground plane
+    // Add scenery - Trees (tall cylinders with sphere tops)
+    for i in 0..5 {
+        let angle = (i as f32 / 5.0) * std::f32::consts::PI * 2.0;
+        let radius = 8.0;
+        let x = angle.cos() * radius;
+        let z = angle.sin() * radius;
+
+        // Tree trunk
+        commands.spawn((
+            Mesh3d(meshes.add(Cylinder::new(0.2, 2.0))),
+            MeshMaterial3d(materials.add(Color::srgb(0.4, 0.25, 0.1))),
+            Transform::from_xyz(x, 1.0, z),
+            Name::new(format!("Tree Trunk {}", i + 1)),
+        ));
+
+        // Tree foliage
+        commands.spawn((
+            Mesh3d(meshes.add(Sphere::new(1.2))),
+            MeshMaterial3d(materials.add(Color::srgb(0.1, 0.5, 0.1))),
+            Transform::from_xyz(x, 2.5, z),
+            Name::new(format!("Tree Foliage {}", i + 1)),
+        ));
+    }
+
+    // Add rocks scattered around
+    for i in 0..8 {
+        let angle = (i as f32 / 8.0) * std::f32::consts::PI * 2.0 + 0.5;
+        let radius = 6.0 + (i as f32 * 0.3);
+        let x = angle.cos() * radius;
+        let z = angle.sin() * radius;
+        let size = 0.3 + (i as f32 * 0.05);
+
+        commands.spawn((
+            Mesh3d(meshes.add(Sphere::new(size))),
+            MeshMaterial3d(materials.add(Color::srgb(0.5, 0.5, 0.5))),
+            Transform::from_xyz(x, size * 0.5, z).with_scale(Vec3::new(1.0, 0.6, 1.2)),
+            Name::new(format!("Rock {}", i + 1)),
+        ));
+    }
+
+    // Spawn ground plane (larger and grass-colored)
     commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(15.0, 15.0))),
-        MeshMaterial3d(materials.add(Color::srgb(0.3, 0.3, 0.3))),
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(25.0, 25.0))),
+        MeshMaterial3d(materials.add(Color::srgb(0.2, 0.6, 0.2))),
         Transform::from_xyz(0.0, 0.0, 0.0),
         Name::new("Ground Plane"),
     ));
@@ -143,7 +183,7 @@ fn setup(
 
     info!("✅ Scene setup complete!");
     info!("💡 TIP: Use mcp__brp__bevy_query to see all entities");
-    info!("💡 TIP: Use mcp__brp__bevy_mutate_component to change cube colors");
+    info!("💡 TIP: Use mcp__brp__bevy_mutate_component to change sphere colors");
     info!("💡 TIP: Use mcp__brp__bevy_spawn to add more objects");
 }
 
@@ -176,8 +216,16 @@ fn bounce_green_cube(
     mut query: Query<(&mut Transform, &BouncingCube)>
 ) {
     for (mut transform, bouncing) in &mut query {
-        // Create a bouncing motion using sine wave
-        let bounce = (time.elapsed_secs() * bouncing.speed).sin().abs();
-        transform.translation.y = bouncing.base_height + (bounce * bouncing.height);
+        // Create an arc trajectory that jumps over the blue sphere
+        let t = (time.elapsed_secs() * bouncing.speed) % (std::f32::consts::PI * 2.0);
+
+        // Horizontal motion: oscillate between -4 and +4 (passing over blue sphere at x=3)
+        let x_range = 4.0;
+        transform.translation.x = (t.cos()) * x_range;
+
+        // Vertical motion: parabolic arc (peaks when horizontal velocity is zero)
+        // Use sin for smooth parabola that peaks at the extremes
+        let arc_height = t.sin().abs();
+        transform.translation.y = bouncing.base_height + (arc_height * bouncing.height);
     }
 }
