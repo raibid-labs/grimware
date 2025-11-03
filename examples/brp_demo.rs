@@ -35,7 +35,7 @@ fn main() {
     }
 
     app.add_systems(Startup, setup)
-    .add_systems(Update, (rotate_cubes, orbit_camera, update_instructions, bounce_green_cube))
+    .add_systems(Update, (rotate_cubes, camera_controller, update_instructions, bounce_green_cube))
     .run();
 }
 
@@ -46,6 +46,21 @@ struct RotatingCube {
 
 #[derive(Component)]
 struct Instructions;
+
+#[derive(Component)]
+struct CameraController {
+    pub move_speed: f32,
+    pub look_speed: f32,
+}
+
+impl Default for CameraController {
+    fn default() -> Self {
+        Self {
+            move_speed: 10.0,
+            look_speed: 0.5,
+        }
+    }
+}
 
 #[derive(Component)]
 #[cfg_attr(feature = "brp", derive(bevy::reflect::Reflect))]
@@ -139,38 +154,51 @@ fn setup(
         Name::new("Ground Plane"),
     ));
 
-    // Spawn multiple lights
+    // Spawn multiple bright lights for a well-lit scene
     commands.spawn((
         PointLight {
-            intensity: 2000.0,
+            intensity: 5000.0,  // Much brighter main light
             shadows_enabled: true,
-            color: Color::srgb(1.0, 0.9, 0.8),
+            color: Color::srgb(1.0, 0.95, 0.9),
             ..default()
         },
-        Transform::from_xyz(4.0, 8.0, 4.0),
+        Transform::from_xyz(4.0, 10.0, 4.0),
         Name::new("Main Light"),
     ));
 
     commands.spawn((
         PointLight {
-            intensity: 1000.0,
-            color: Color::srgb(0.8, 0.8, 1.0),
+            intensity: 3000.0,  // Brighter fill light
+            color: Color::srgb(0.9, 0.9, 1.0),
             ..default()
         },
-        Transform::from_xyz(-4.0, 4.0, -4.0),
+        Transform::from_xyz(-4.0, 8.0, -4.0),
         Name::new("Fill Light"),
     ));
 
-    // Spawn orbiting camera
+    // Add additional overhead light for brightness
+    commands.spawn((
+        PointLight {
+            intensity: 4000.0,
+            color: Color::srgb(1.0, 1.0, 1.0),
+            shadows_enabled: false,
+            ..default()
+        },
+        Transform::from_xyz(0.0, 15.0, 0.0),
+        Name::new("Overhead Light"),
+    ));
+
+    // Spawn user-controlled camera
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(0.0, 8.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
-        Name::new("Orbiting Camera"),
+        CameraController::default(),
+        Name::new("Player Camera"),
     ));
 
     // Instructions text
     commands.spawn((
-        Text::new("BRP Demo Active - Connect via MCP tools!"),
+        Text::new("BRP Demo | WASD: Move | Mouse: Look | Shift: Down | Space: Up"),
         Node {
             position_type: PositionType::Absolute,
             top: Val::Px(10.0),
@@ -193,10 +221,53 @@ fn rotate_cubes(time: Res<Time>, mut query: Query<(&mut Transform, &RotatingCube
     }
 }
 
-fn orbit_camera(time: Res<Time>, mut query: Query<&mut Transform, With<Camera3d>>) {
-    for mut transform in &mut query {
-        transform.rotate_around(Vec3::ZERO, Quat::from_rotation_y(time.delta_secs() * 0.2));
-        transform.look_at(Vec3::ZERO, Vec3::Y);
+fn camera_controller(
+    time: Res<Time>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut mouse_motion: EventReader<bevy::input::mouse::MouseMotion>,
+    mut query: Query<(&mut Transform, &CameraController), With<Camera3d>>,
+) {
+    for (mut transform, controller) in &mut query {
+        let mut velocity = Vec3::ZERO;
+        let forward = transform.forward();
+        let right = transform.right();
+
+        // Keyboard movement (WASD)
+        if keys.pressed(KeyCode::KeyW) {
+            velocity += *forward;
+        }
+        if keys.pressed(KeyCode::KeyS) {
+            velocity -= *forward;
+        }
+        if keys.pressed(KeyCode::KeyD) {
+            velocity += *right;
+        }
+        if keys.pressed(KeyCode::KeyA) {
+            velocity -= *right;
+        }
+        if keys.pressed(KeyCode::Space) {
+            velocity += Vec3::Y;
+        }
+        if keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight) {
+            velocity -= Vec3::Y;
+        }
+
+        // Apply movement
+        if velocity.length() > 0.0 {
+            velocity = velocity.normalize();
+            transform.translation += velocity * controller.move_speed * time.delta_secs();
+        }
+
+        // Mouse look (when mouse moves)
+        for mouse_event in mouse_motion.read() {
+            let delta = mouse_event.delta;
+            let yaw = -delta.x * controller.look_speed * time.delta_secs();
+            let pitch = -delta.y * controller.look_speed * time.delta_secs();
+
+            // Rotate camera
+            transform.rotate_y(yaw);
+            transform.rotate_local_x(pitch);
+        }
     }
 }
 
