@@ -20,6 +20,7 @@ This project showcases how to integrate **Claude Code** with a **Bevy game engin
 
 - Rust (latest stable) - [Install here](https://www.rust-lang.org/tools/install)
 - Claude Code CLI - [Install guide](https://docs.claude.com/en/docs/claude-code)
+- **Bevy 0.16+** - This project requires Bevy 0.16 for full BRP support
 
 ### Installation
 
@@ -48,13 +49,15 @@ cargo run --example brp_demo --features brp
 
 ### MCP Integration
 
-The Bevy Remote Protocol (BRP) MCP server provides Claude Code with direct access to your running game. Available tools include:
+The Bevy Remote Protocol (BRP) MCP server provides Claude Code with direct access to your running game. This project uses **bevy_brp_extras** for extended functionality including component mutation. Available tools include:
 
 - **Entity Management**: `bevy_spawn`, `bevy_destroy`, `bevy_query`
-- **Component Operations**: `bevy_get`, `bevy_insert`, `bevy_mutate_component`
-- **Resource Access**: `bevy_get_resource`, `bevy_mutate_resource`
+- **Component Operations**: `bevy_get`, `bevy_insert`, `bevy_mutate_component` (via bevy_brp_extras)
+- **Resource Access**: `bevy_get_resource`, `bevy_mutate_resource` (via bevy_brp_extras)
 - **Discovery**: `bevy_list`, `bevy_registry_schema`
 - **Monitoring**: `bevy_get_watch`, `brp_list_logs`
+
+**Note**: The `bevy_brp_extras` plugin includes `RemotePlugin` and `RemoteHttpPlugin` internally, providing full mutation support beyond base BRP capabilities.
 
 ### Example Workflow
 
@@ -200,10 +203,15 @@ See [docs/EXAMPLES.md](docs/EXAMPLES.md) for more examples!
 
 BRP is a JSON-RPC interface that allows external tools to:
 - Query entity-component data
-- Modify component values
+- Modify component values (requires bevy_brp_extras for full mutation support)
 - Spawn and destroy entities
 - Access global resources
 - Monitor changes in real-time
+
+This project uses **bevy_brp_extras** (v0.1+) which extends base BRP with:
+- `bevy/mutate_component` - Modify specific component fields without replacing entire components
+- `bevy/mutate_resource` - Modify specific resource fields
+- Full reflection support for custom components
 
 ### Entity-Component-System (ECS)
 

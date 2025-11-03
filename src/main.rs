@@ -15,9 +15,11 @@ fn main() {
     // Add Bevy Remote Protocol for MCP integration
     #[cfg(feature = "brp")]
     {
-        use bevy::remote::RemotePlugin;
-        app.add_plugins(RemotePlugin::default());
+        use bevy_brp_extras::BrpExtrasPlugin;
+        // BrpExtrasPlugin includes RemotePlugin and RemoteHttpPlugin internally
+        app.add_plugins(BrpExtrasPlugin);
         info!("Bevy Remote Protocol (BRP) enabled on port 15702");
+        info!("BRP Extras enabled - full mutation support!");
         info!("MCP tools can now interact with this game instance");
     }
 

@@ -4,12 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.15", features = ["dynamic_linking"] }
+bevy = { version = "0.16", features = ["dynamic_linking"] }
+bevy_brp_extras = { version = "0.1", optional = true }
 
 [features]
 default = []
 # Enable Bevy Remote Protocol for MCP integration
-brp = ["bevy/bevy_remote"]
+brp = ["bevy/bevy_remote", "bevy_brp_extras"]
 
 [profile.dev]
 opt-level = 1

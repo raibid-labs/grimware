@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 #[cfg(feature = "brp")]
-use bevy::remote::RemotePlugin;
+use bevy_brp_extras::BrpExtrasPlugin;
 
 /// Example demonstrating BRP integration for MCP tools
 /// Run with: cargo run --example brp_demo --features brp
@@ -25,15 +25,18 @@ fn main() {
     // Add BRP support for MCP integration
     #[cfg(feature = "brp")]
     {
-        app.add_plugins(RemotePlugin::default());
+        // BrpExtrasPlugin includes RemotePlugin and RemoteHttpPlugin internally
+        app.add_plugins(BrpExtrasPlugin)
+            .register_type::<BouncingCube>();
         info!("🎮 BRP enabled on port 15702");
+        info!("🚀 BRP Extras enabled - full mutation support!");
         info!("🤖 MCP tools can now interact with this game");
         info!("💡 Try querying entities, modifying transforms, or spawning objects!");
     }
 
     app.add_systems(Startup, setup)
-        .add_systems(Update, (rotate_cubes, orbit_camera, update_instructions))
-        .run();
+    .add_systems(Update, (rotate_cubes, orbit_camera, update_instructions, bounce_green_cube))
+    .run();
 }
 
 #[derive(Component)]
@@ -43,6 +46,15 @@ struct RotatingCube {
 
 #[derive(Component)]
 struct Instructions;
+
+#[derive(Component)]
+#[cfg_attr(feature = "brp", derive(bevy::reflect::Reflect))]
+#[cfg_attr(feature = "brp", reflect(Component))]
+struct BouncingCube {
+    height: f32,
+    speed: f32,
+    base_height: f32,
+}
 
 fn setup(
     mut commands: Commands,
@@ -59,13 +71,23 @@ fn setup(
     ];
 
     for (pos, color, speed, name) in cube_configs.iter() {
-        commands.spawn((
+        let mut entity = commands.spawn((
             Mesh3d(meshes.add(Cuboid::default())),
             MeshMaterial3d(materials.add(*color)),
             Transform::from_translation(*pos),
             RotatingCube { speed: *speed },
             Name::new(*name),
         ));
+
+        // Add bouncing component to green cube
+        if *name == "Green Cube" {
+            entity.insert(BouncingCube {
+                height: 5.0,  // Jump high enough to clear the blue cube!
+                speed: 2.0,   // Slower for dramatic effect
+                base_height: 0.5,
+            });
+        }
+
         info!("Spawned: {}", name);
     }
 
@@ -146,5 +168,16 @@ fn update_instructions(time: Res<Time>, mut query: Query<&mut Text, With<Instruc
             elapsed / 60,
             elapsed % 60
         );
+    }
+}
+
+fn bounce_green_cube(
+    time: Res<Time>,
+    mut query: Query<(&mut Transform, &BouncingCube)>
+) {
+    for (mut transform, bouncing) in &mut query {
+        // Create a bouncing motion using sine wave
+        let bounce = (time.elapsed_secs() * bouncing.speed).sin().abs();
+        transform.translation.y = bouncing.base_height + (bounce * bouncing.height);
     }
 }
