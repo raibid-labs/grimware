@@ -70,10 +70,10 @@ The Bevy Remote Protocol (BRP) MCP server provides Claude Code with direct acces
    > "Show me all entities with Transform components"
 
 3. **Make live changes:**
-   > "Move the camera to position (10, 10, 10)"
+   > "Make the green sphere jump twice as high"
 
 4. **Test ideas without recompiling:**
-   > "Spawn a red cube at position (5, 0, 0)"
+   > "Spawn a golden sphere at position (5, 0, 0) with a metallic material"
 
 5. **Finalize code:**
    > "Update the code with the changes that worked"
@@ -147,15 +147,36 @@ cargo run --example basic_scene
 ```
 
 ### BRP Interactive Demo
-Multi-cube scene with orbiting camera, demonstrating BRP capabilities:
-- Named entities for easy identification
-- Multiple colored cubes with different rotation speeds
-- Dynamic lighting setup
-- Real-time instructions display
+Immersive 3D park scene with interactive camera controls, demonstrating full BRP capabilities:
+
+**Visual Features:**
+- 3 rotating spheres (red, green bouncing, blue) with smooth animations
+- Green sphere performs spectacular parabolic arc trajectory (jumps over blue sphere)
+- 5 trees with brown trunks and green foliage in circular arrangement
+- 8 decorative rocks scattered naturally around the scene
+- Grass-colored 25x25 ground plane
+- Bright ambient lighting (500 brightness) + 3 point lights for even illumination
+
+**Interactive Controls:**
+- **Press 'C'** to grab cursor and enable mouse look
+- **WASD** - First-person movement (forward/left/back/right)
+- **Mouse** - Free-look camera rotation (when cursor grabbed)
+- **Space** - Fly up
+- **Shift** - Fly down
+- **ESC** - Release cursor
+
+**BRP Features Demonstrated:**
+- Live component mutation (modify sphere bounce height in real-time)
+- Entity querying and inspection
+- Transform manipulation
+- Component registration with reflection system
+- 30+ named entities for easy MCP interaction
 
 ```bash
 cargo run --example brp_demo --features brp
 ```
+
+**Pro Tip:** Use the camera controls to explore the scene from different angles and watch the green sphere's parabolic jump from various perspectives!
 
 ## 🛠️ MCP Tools Quick Reference
 
@@ -172,7 +193,7 @@ mcp__brp__bevy_query({
 })
 ```
 
-### Spawn a cube
+### Spawn a sphere
 ```javascript
 mcp__brp__bevy_spawn({
   components: {
@@ -180,7 +201,8 @@ mcp__brp__bevy_spawn({
       "translation": [0.0, 5.0, 0.0],
       "rotation": [0.0, 0.0, 0.0, 1.0],
       "scale": [1.0, 1.0, 1.0]
-    }
+    },
+    "bevy_core::name::Name": "My Sphere"
   }
 })
 ```
@@ -239,9 +261,12 @@ Traditional game development workflow:
 
 With BRP + MCP workflow:
 1. Run game once
-2. Test ideas via live editing
-3. Finalize code based on what works
-4. Minimal compilation needed
+2. Test ideas via live editing (change sphere height from 5.0 → 12.0 in seconds!)
+3. Experiment freely (move objects, change colors, spawn entities)
+4. Finalize code based on what works
+5. Minimal compilation needed
+
+**Real Example:** In this demo, we modified the green sphere's bounce height from 5.0 to 8.0 to 12.0 **all while the game was running** - no recompilation required!
 
 **Result**: Faster iteration, more experimentation, better games!
 
