@@ -1,0 +1,77 @@
+JUSTFILE SUMMARY FOR WEBATUI
+=============================
+
+INSTALLED: 70+ commands across 10 categories
+
+BUILD (5):
+  build, build-release, build-wasm, build-wasm-pack, build-wasm-release
+
+RUN (3):
+  run, run-example, serve
+
+TEST (5):
+  test, test-all, test-wasm, test-coverage, test-one
+
+CHECK (3):
+  check, check-wasm, check-all
+
+FORMAT & LINT (5):
+  fmt, fmt-check, lint, lint-strict, lint-fix
+
+CLEAN (3):
+  clean, clean-wasm, clean-all
+
+WATCH (4):
+  watch, watch-test, watch-example, watch-wasm
+
+INSTALL (3):
+  install-deps, install-wasm-tools, install-all
+
+WORKFLOWS (4):
+  dev, prod, ci, dev-wasm
+
+DOCS (3):
+  docs, docs-open, docs-private
+
+STATS (5):
+  stats, status, info, deps, outdated
+
+WASM (5):
+  wasm-web, wasm-bundler, wasm-node, wasm-test-browser, wasm-optimize
+
+SERVER (2):
+  server, server-pkg
+
+DEPLOY (2):
+  deploy, deploy-build
+
+BENCHMARKS (2):
+  bench, bench-one
+
+AUDIT (2):
+  audit, update
+
+UTILITIES (6):
+  init-wasm, new-example, tags, help, profile-build, timings
+
+ADVANCED (4):
+  expand, size, strip, asm
+
+NUSHELL SCRIPTS (5):
+  scripts/build.nu    - Advanced build automation
+  scripts/serve.nu    - HTTP server with options
+  scripts/deploy.nu   - Deployment to multiple platforms
+  scripts/test.nu     - Comprehensive test runner
+  scripts/clean.nu    - Cleanup with dry-run support
+
+QUICK START:
+  just                # Show all commands
+  just build-wasm     # Build WASM
+  just serve          # Serve locally
+  just dev            # Development workflow
+  just deploy         # Deploy to GitHub Pages
+
+DOCUMENTATION:
+  docs/AUTOMATION.md       - Complete guide
+  scripts/README.md        - Scripts documentation
+  QUICK_REFERENCE.md       - Fast lookup
