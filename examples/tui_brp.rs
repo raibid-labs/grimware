@@ -1,8 +1,11 @@
 //! TUI + BRP integration example
 //!
-//! Demonstrates terminal rendering with AI control via BRP.
+//! Demonstrates 3D rendering to terminal with AI control via BRP.
+//! Creates a window (for 3D rendering) AND displays ASCII in terminal.
 //!
 //! Run with: cargo run --example tui_brp --features full
+//! BRP listens on: localhost:15702
+//! Exit with: Ctrl+C or close window
 
 use bevy::prelude::*;
 use bevy_mcp_ratatui_ref::prelude::*;
@@ -13,9 +16,11 @@ use bevy_brp_extras::BrpExtrasPlugin;
 fn main() {
     let mut app = App::new();
 
+    // Note: bevy_ratatui_camera requires full 3D rendering infrastructure
+    // DefaultPlugins provides the rendering pipeline that gets converted to ASCII
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: "TUI + BRP Example - AI Controllable".to_string(),
+            title: "TUI + BRP - AI-Controlled 3D Terminal Rendering".to_string(),
             resolution: (1024., 768.).into(),
             ..default()
         }),
@@ -25,9 +30,11 @@ fn main() {
     // Add BRP for AI control
     #[cfg(feature = "brp")]
     {
-        app.add_plugins(BrpExtrasPlugin);
+        app.add_plugins(CustomBrpPlugin);  // Custom BRP methods for entity spawning
+        app.add_plugins(BrpExtrasPlugin);  // Extra features (screenshot, shutdown)
         info!("🤖 BRP enabled on port 15702");
         info!("💡 AI can now control this scene via MCP tools");
+        info!("🔧 Custom spawn methods available: bevy/spawn_cube, bevy/spawn_sphere");
     }
 
     // Add TUI rendering
@@ -95,9 +102,14 @@ fn setup(
     ));
 
     info!("✅ AI-controllable scene setup complete");
-    info!("📺 Terminal rendering active");
-    info!("🎮 Try AI prompts like:");
+    info!("📺 Check your terminal for ASCII rendering!");
+    info!("🤖 BRP ready for MCP commands on localhost:15702");
+    info!("🪟 Window provides 3D rendering, terminal shows ASCII conversion");
+    info!("");
+    info!("💡 Try AI prompts like:");
     info!("   - 'Show me all entities'");
+    info!("   - 'Add a cube at position [3, 1, 0]'");
+    info!("   - 'Spawn a red sphere at [-3, 1, 0]'");
     info!("   - 'Move the red sphere up by 2 units'");
     info!("   - 'Change the green sphere color to yellow'");
 }

@@ -36,16 +36,28 @@ cargo build --release --features full
 
 ### Running Examples
 
+**Important: How TUI Rendering Works**
+
+`bevy_ratatui_camera` requires the full 3D rendering pipeline to work. It captures the rendered 3D scene and converts it to ASCII. This means:
+
+- **A window is created** (provides the 3D rendering infrastructure)
+- **Terminal shows ASCII** (converted from the 3D render)
+- **Both outputs run simultaneously**
+
+This is "3D-to-ASCII conversion", not a pure terminal-only TUI app like nvim.
+
 ```bash
-# Basic TUI rendering example
+# Basic TUI rendering (window + terminal ASCII output)
 cargo run --example tui_basic --features tui
 
-# TUI + BRP integration (AI-controllable)
+# With BRP for AI control
 cargo run --example tui_brp --features full
 
-# Dual mode: windowed + TUI simultaneously
+# Enhanced dual mode with complex scene
 cargo run --example windowed_tui --features full
 ```
+
+**Exit**: Press `Ctrl+C` or close the window.
 
 ### Testing
 
@@ -170,8 +182,32 @@ full = ["brp", "tui"]
 ```
 
 - **Rationale**: Users may want TUI rendering without BRP, or BRP without TUI
-- **Default**: No features enabled (minimal Bevy app)
+- **Default**: No features enabled (minimal Bevy app with window)
 - **Development**: Use `--features full` for complete integration
+
+### Plugin Usage Patterns
+
+**Standard Usage (Window + Terminal ASCII)**:
+```rust
+use bevy::prelude::*;
+use bevy_mcp_ratatui_ref::prelude::*;
+
+fn main() {
+    App::new()
+        .add_plugins(DefaultPlugins)  // Provides 3D rendering pipeline
+        .add_plugins(BevyMcpTuiPlugin::default())  // Converts to ASCII
+        .run();
+}
+```
+
+**Why DefaultPlugins is Required**:
+- `bevy_ratatui_camera` needs the full rendering pipeline (meshes, materials, lighting)
+- It captures the rendered 3D frame and converts pixels to ASCII characters
+- Without `DefaultPlugins`, resources like `Assets<Mesh>` don't exist
+- True headless rendering would require custom minimal plugin configuration
+
+**Using RatatuiPlugins Directly**:
+`RatatuiPlugins` is for pure TUI apps (text-based UIs like nvim), not 3D-to-ASCII conversion. It doesn't include the rendering infrastructure needed for this project.
 
 ### Rendering Strategy Selection
 

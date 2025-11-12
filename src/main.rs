@@ -1,6 +1,7 @@
 //! Main binary entry point for Bevy MCP Ratatui reference implementation
 //!
-//! This runs a Bevy application with optional TUI rendering and BRP integration.
+//! Default behavior: Dual-mode rendering (window + terminal output)
+//! The window provides 3D rendering context, terminal displays ASCII/Unicode conversion.
 
 use bevy::prelude::*;
 
@@ -13,7 +14,7 @@ use bevy_brp_extras::BrpExtrasPlugin;
 fn main() {
     let mut app = App::new();
 
-    // Add default Bevy plugins with window configuration
+    // Use DefaultPlugins for full 3D rendering infrastructure (dual mode: window + terminal)
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: "Bevy MCP Ratatui - AI-Controlled Terminal Rendering".to_string(),
@@ -22,6 +23,12 @@ fn main() {
         }),
         ..default()
     }));
+
+    #[cfg(feature = "tui")]
+    info!("🖥️  Running in dual mode (window + terminal rendering)");
+
+    #[cfg(not(feature = "tui"))]
+    info!("🪟 Running in windowed mode (use --features tui for terminal rendering)");
 
     // Add BRP (Bevy Remote Protocol) for MCP integration
     #[cfg(feature = "brp")]

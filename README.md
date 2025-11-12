@@ -44,12 +44,17 @@ This project combines three powerful technologies to create a unique AI-driven d
 git clone https://github.com/your-username/bevy-mcp-ratatui-ref.git
 cd bevy-mcp-ratatui-ref
 
-# Run the TUI demo
-cargo run --features brp
+# Run basic example (window + terminal ASCII output)
+cargo run --example tui_basic --features tui
 
-# The application will start with:
-# - BRP listening on localhost:15702 for AI commands
-# - 3D scene rendering to your terminal
+# OR run with BRP for AI control
+cargo run --example tui_brp --features full
+
+# How it works:
+# - Window displays standard 3D rendering
+# - Terminal shows ASCII conversion of the 3D scene
+# - BRP listens on localhost:15702 for AI commands (with --features full)
+# - Press Ctrl+C or close window to exit
 ```
 
 ### First AI Interaction
@@ -58,10 +63,36 @@ Once the application is running, try these prompts with Claude Code:
 
 ```
 "Show me all entities currently in the TUI scene"
-"Spawn a red cube at position (0, 5, 0)"
-"Change the rendering strategy to edge detection"
-"Make the camera orbit around the scene"
+"Add a red cube at position [3, 1, 0]"
+"Spawn a shiny purple sphere at [-3, 1, 0]"
+"Move the red sphere up by 2 units"
+"Change the green sphere color to yellow"
 ```
+
+### Custom BRP Methods
+
+This project implements custom BRP methods that solve a key limitation: **standard BRP cannot spawn entities with meshes and materials** because asset handles aren't serializable.
+
+**Available custom methods:**
+- `bevy/spawn_cube` - Spawn cubes with position, scale, color, and material properties
+- `bevy/spawn_sphere` - Spawn spheres with position, radius, color, and material properties
+
+**Example usage:**
+```javascript
+// Via MCP BRP tool
+mcp__brp__brp_execute({
+  method: "bevy/spawn_cube",
+  params: {
+    position: [3.0, 1.0, 0.0],
+    color: [0.8, 0.2, 0.2],
+    metallic: 0.7,
+    roughness: 0.3,
+    name: "Red Cube"
+  }
+})
+```
+
+See [Custom BRP Methods Documentation](docs/custom-brp-methods.md) for complete API reference, AI prompt examples, and how to extend with more shapes.
 
 ## 📚 Documentation
 
@@ -101,6 +132,14 @@ Comprehensive documentation organized by topic:
   - Troubleshooting guide with solutions
   - Multi-camera layouts and custom renderers
 
+- **[Custom BRP Methods](docs/custom-brp-methods.md)** - Entity spawning API
+  - Complete API reference for spawn_cube and spawn_sphere
+  - AI prompt patterns for entity creation
+  - JSON-RPC examples and curl commands
+  - Technical details on why custom methods are needed
+  - Guide to extending with more shapes
+  - Integration with standard BRP methods
+
 ### Additional Resources
 
 - **[ARCHITECTURE_SUMMARY.md](docs/ARCHITECTURE_SUMMARY.md)** - Quick reference guide
@@ -114,8 +153,8 @@ Comprehensive documentation organized by topic:
          │
          ▼
 ┌─────────────────┐
-│   MCP Bridge    │  bevy_spawn, bevy_mutate_component, etc.
-└────────┬────────┘
+│   MCP Bridge    │  Custom: spawn_cube, spawn_sphere
+└────────┬────────┘  Standard: mutate_component, query, etc.
          │
          ▼
 ┌─────────────────┐

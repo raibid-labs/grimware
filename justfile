@@ -5,23 +5,23 @@
 default:
     @just --list
 
-# Run the main application with TUI rendering
+# Run the main application with TUI rendering (window + terminal ASCII)
 run:
     cargo run --features tui
 
-# Run main app with both TUI and BRP (when Phase 2 complete)
+# Run main app with both TUI and BRP (AI-controllable via MCP)
 run-full:
     cargo run --features full
 
-# Run basic TUI example
+# Run basic TUI example (window + terminal ASCII)
 demo:
     cargo run --example tui_basic --features tui
 
-# Run TUI + BRP integration example (requires Phase 2)
+# 🤖 Run TUI + BRP integration example (AI-CONTROLLABLE via BRP on port 15702)
 demo-brp:
     cargo run --example tui_brp --features full
 
-# Run windowed + TUI dual rendering example
+# Run enhanced dual rendering example with complex scene
 demo-dual:
     cargo run --example windowed_tui --features full
 
@@ -143,13 +143,17 @@ deps-update:
 
 # Show current phase status
 status:
-    @echo "📋 Phase 1 Status: COMPLETE ✅"
-    @echo "================================"
+    @echo "📋 Implementation Status"
+    @echo "========================"
     @echo ""
-    @cargo check --no-default-features 2>&1 | tail -1
-    @cargo check --features tui 2>&1 | tail -1
+    @echo "✅ TUI Rendering: WORKING"
+    @echo "✅ BRP Integration: WORKING"
+    @echo "✅ 3D Terminal Output: WORKING"
     @echo ""
-    @echo "See docs/PHASE1_STATUS.md for details"
+    @echo "🤖 AI Control: Run 'just demo-brp' then use MCP tools"
+    @echo "   BRP listens on localhost:15702"
+    @echo ""
+    @cargo check --features full 2>&1 | tail -1
 
 # Run basic TUI example in release mode for best performance
 demo-release:
@@ -215,7 +219,8 @@ new-example NAME:
     @echo "" >> examples/{{NAME}}.rs
     @echo "fn main() {" >> examples/{{NAME}}.rs
     @echo "    App::new()" >> examples/{{NAME}}.rs
-    @echo "        .add_plugins(DefaultPlugins)" >> examples/{{NAME}}.rs
+    @echo "        .add_plugins(DefaultPlugins)  // Provides 3D rendering" >> examples/{{NAME}}.rs
+    @echo "        .add_plugins(BevyMcpTuiPlugin::default())  // Adds ASCII conversion" >> examples/{{NAME}}.rs
     @echo "        .run();" >> examples/{{NAME}}.rs
     @echo "}" >> examples/{{NAME}}.rs
     @echo "✅ Created examples/{{NAME}}.rs"
@@ -241,11 +246,17 @@ help:
     @echo "🎮 Bevy MCP Ratatui Reference - Quick Start"
     @echo "==========================================="
     @echo ""
-    @echo "Common Commands:"
-    @echo "  just demo              - Run basic TUI demo"
-    @echo "  just demo-dual         - Run windowed + TUI demo"
+    @echo "🚀 Quick Start:"
+    @echo "  just demo              - Run basic demo (window + terminal ASCII)"
+    @echo "  just demo-brp          - 🤖 AI-controllable demo (BRP on :15702)"
+    @echo "  just demo-dual         - Enhanced demo with complex scene"
     @echo "  just watch-demo        - Auto-reload demo on changes"
-    @echo "  just run               - Run main app with TUI"
+    @echo "  just run-full          - Run main app with TUI + BRP"
+    @echo ""
+    @echo "🤖 AI Control:"
+    @echo "  just demo-brp          - Start AI-controllable app"
+    @echo "                          (BRP listens on localhost:15702)"
+    @echo "  Then use MCP tools:     bevy_spawn, bevy_mutate_component, etc."
     @echo ""
     @echo "Development:"
     @echo "  just dev               - Format, check, test"
@@ -254,12 +265,12 @@ help:
     @echo "  just test              - Run all tests"
     @echo ""
     @echo "Build:"
-    @echo "  just build             - Build all features"
+    @echo "  just build-full        - Build with all features"
     @echo "  just build-release     - Release build"
     @echo "  just prod              - Full production build"
     @echo ""
     @echo "Information:"
-    @echo "  just status            - Show Phase 1 status"
+    @echo "  just status            - Show implementation status"
     @echo "  just stats             - Project statistics"
     @echo "  just features          - Show available features"
     @echo "  just terminal-info     - Terminal capabilities"

@@ -10,7 +10,7 @@
 //! - `brp`: Bevy Remote Protocol for MCP integration
 //! - `full`: Both TUI and BRP enabled
 //!
-//! # Example
+//! # Example - Terminal-Only Rendering
 //!
 //! ```no_run
 //! use bevy::prelude::*;
@@ -18,6 +18,22 @@
 //!
 //! fn main() {
 //!     App::new()
+//!         // Terminal-only rendering (no window)
+//!         .add_plugins(RatatuiPlugins::default())
+//!         .add_plugins(BevyMcpTuiPlugin::default())
+//!         .run();
+//! }
+//! ```
+//!
+//! # Example - Windowed + Terminal Dual Mode
+//!
+//! ```no_run
+//! use bevy::prelude::*;
+//! use bevy_mcp_ratatui_ref::prelude::*;
+//!
+//! fn main() {
+//!     App::new()
+//!         // Windowed mode with terminal rendering
 //!         .add_plugins(DefaultPlugins)
 //!         .add_plugins(BevyMcpTuiPlugin::default())
 //!         .run();
@@ -37,8 +53,11 @@ pub mod prelude {
     #[cfg(feature = "tui")]
     pub use crate::tui::{BevyMcpTuiPlugin, TuiConfig, TuiRenderMode};
 
+    #[cfg(feature = "tui")]
+    pub use bevy_ratatui::RatatuiPlugins;
+
     #[cfg(feature = "brp")]
-    pub use crate::brp::BrpConfig;
+    pub use crate::brp::{BrpConfig, CustomBrpPlugin};
 
     pub use crate::systems::*;
 }

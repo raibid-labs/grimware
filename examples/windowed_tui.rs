@@ -1,8 +1,10 @@
-//! Windowed + TUI dual rendering example
+//! Windowed + TUI dual rendering example (Debugging Mode)
 //!
 //! Demonstrates simultaneous window and terminal rendering.
+//! Useful for debugging - compare the 3D window output with ASCII terminal rendering.
 //!
 //! Run with: cargo run --example windowed_tui --features full
+//! Exit with: Close window or Ctrl+C
 
 use bevy::prelude::*;
 use bevy_mcp_ratatui_ref::prelude::*;
@@ -25,7 +27,8 @@ fn main() {
     // Add BRP
     #[cfg(feature = "brp")]
     {
-        app.add_plugins(BrpExtrasPlugin);
+        app.add_plugins(CustomBrpPlugin);  // Custom BRP methods for entity spawning
+        app.add_plugins(BrpExtrasPlugin);  // Extra features (screenshot, shutdown)
     }
 
     // Add TUI rendering
@@ -120,4 +123,10 @@ fn setup(
 
     info!("✅ Dual rendering scene complete");
     info!("💡 Same scene renders to both window and terminal!");
+    info!("🔍 Use this mode to verify TUI rendering accuracy");
+    info!("🎮 Close window or Ctrl+C to exit");
+    info!("");
+    info!("💡 Try AI prompts like:");
+    info!("   - 'Add a cube at position [3, 1, 0]'");
+    info!("   - 'Spawn a purple sphere at [-3, 1, 0]'");
 }

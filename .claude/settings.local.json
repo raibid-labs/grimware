@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__brp__brp_list_brp_apps",
+      "mcp__brp__brp_status",
+      "mcp__brp__bevy_query",
+      "mcp__brp__bevy_spawn",
+      "mcp__brp__bevy_list",
+      "mcp__brp__brp_extras_discover_format",
+      "mcp__brp__bevy_get",
+      "Bash(cargo check:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "claude-flow",
+    "ruv-swarm",
+    "claude-flow@alpha",
+    "flow-nexus",
+    "agentic-payments"
+  ]
+}
