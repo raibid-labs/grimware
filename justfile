@@ -34,15 +34,33 @@ build-wasm-release:
 
 # === Run Commands ===
 
-# Run the default binary
-run *ARGS:
-    @echo "▶️  Running project..."
-    cargo run {{ARGS}}
 
-# Run a specific example
+# Run (this is a library - use examples instead)
+run *ARGS:
+    @echo "⚠️  This is a library crate, not a binary."
+    @echo "💡 Use 'just example <name>' to run an example:"
+    @echo ""
+    @just list-examples
+
+
+# Run a specific example (this is a library crate)
 run-example NAME *ARGS:
     @echo "📝 Running example: {{NAME}}..."
-    cargo run --example {{NAME}} {{ARGS}}
+    cargo run --example {{NAME}} --features terminal {{ARGS}}
+
+# Alias for run-example (shorter)
+example NAME:
+    @just run-example {{NAME}}
+
+# List all available examples
+list-examples:
+    @echo "📋 Available examples:"
+    @echo "  - basic         : Simple terminal UI example"
+    @echo "  - dashboard     : Dashboard with system metrics"
+    @echo "  - interactive   : Interactive UI with user input"
+    @echo ""
+    @echo "💡 Run with: just example <name>"
+    @echo "   or:       cargo run --example <name> --features terminal"
 
 # Serve WASM build with HTTP server
 serve PORT="8080":
@@ -143,29 +161,32 @@ clean-all:
 # Watch and rebuild on changes
 watch:
     @echo "👀 Watching for changes..."
-    cargo watch -x build
+    bacon --features terminal
 
 # Watch and run tests on changes
 watch-test:
     @echo "👀 Watching and testing..."
-    cargo watch -x test
+    bacon test --features terminal
 
 # Watch and run specific example
+# Uses bacon with custom job configuration
 watch-example NAME:
     @echo "👀 Watching example: {{NAME}}..."
-    cargo watch -x "run --example {{NAME}}"
+    @echo "💡 Running bacon with example-{{NAME}} job"
+    bacon example-{{NAME}}
 
 # Watch WASM build
 watch-wasm:
     @echo "👀 Watching WASM build..."
-    cargo watch -x "build --target wasm32-unknown-unknown"
+    bacon check --target wasm32-unknown-unknown
 
 # === Install Commands ===
 
 # Install development dependencies
 install-deps:
     @echo "📦 Installing dependencies..."
-    cargo install cargo-watch
+    @echo "⚠️  Using bacon instead of cargo-watch (Apple Silicon compatibility)..."
+    cargo install bacon
     cargo install wasm-pack
     cargo install wasm-bindgen-cli
     cargo install basic-http-server
@@ -274,7 +295,7 @@ wasm-node:
 # Test WASM in browser
 wasm-test-browser:
     @echo "🌐 Testing WASM in browser..."
-    wasm-pack test --headless --chrome
+    wasm-pack test --headless --chrome -- --lib --no-default-features
 
 # Optimize WASM bundle
 wasm-optimize:
