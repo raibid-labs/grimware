@@ -1,0 +1,24 @@
+# Rust
+/target
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.wasm
+*.js
+*.html
+pkg/
+
+# Local configuration
+.env
+config.local.toml
