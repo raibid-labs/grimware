@@ -1,0 +1,16 @@
+{
+  "extends": "github:raibid-labs/workspace/templates/repo-types/rust-service.json",
+  "name": "grimware",
+  "description": "Multi-language service in Rust",
+  "repositoryUrl": "https://github.com/raibid-labs/grimware",
+  "context": [
+    "README.md"
+  ],
+  "project": {
+    "type": "rust-service",
+    "primaryLanguage": "rust",
+    "features": [
+      "multi-language-support"
+    ]
+  }
+}
