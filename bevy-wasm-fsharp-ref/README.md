@@ -1,5 +1,7 @@
 # Bevy WASM F# Reference Implementation
 
+[![CI Status](https://github.com/raibid-labs/grimware/actions/workflows/bevy-wasm-fsharp-ci.yml/badge.svg)](https://github.com/raibid-labs/grimware/actions/workflows/bevy-wasm-fsharp-ci.yml)
+
 A reference implementation demonstrating the **F# → Rust → Bevy → WASM** development path for game development. This project showcases how F# game logic can be transpiled to Rust and integrated into a Bevy game engine application that runs both natively and in the browser.
 
 ## 🎮 Overview
@@ -46,10 +48,15 @@ just run
 
 ### Controls
 
-- **Space** - Player attacks the monster
+- **Space** - Attack on your turn
 - **ESC** - Quit
 
-Combat events are logged to the console. When monster HP reaches 0, you win!
+The game features **turn-based combat**:
+- Player and monster take turns attacking
+- Press Space during your turn to attack
+- Monster attacks automatically after a 1-second delay
+- Combat events and HP are logged to the console
+- Game ends when either combatant reaches 0 HP
 
 ## 🎯 Project Structure
 
@@ -161,14 +168,23 @@ pub struct CombatEvent {
 
 ### Combat System
 
-Simple turn-based combat:
+**Turn-Based Combat** with automatic monster AI:
 
-1. Player presses Space
-2. `compute_attack()` calculates damage
-   - Formula: `(attacker.attack + ability.power - defender.defense).max(1)`
-3. Monster HP is updated
-4. Combat event logged to console
-5. If monster HP ≤ 0, game over (player wins)
+1. Game starts with **Player's Turn**
+2. Player presses Space → attack executes
+3. Damage calculated: `(attacker.attack + ability.power - defender.defense).max(1)`
+4. HP and events logged to console
+5. State switches to **Monster's Turn**
+6. After 1 second delay, monster attacks automatically
+7. State switches back to **Player's Turn**
+8. Repeat until either HP ≤ 0 → **Game Over**
+
+**Combat State Machine:**
+- `PlayerTurn` → Player input accepted, monster inactive
+- `MonsterTurn` → Monster attacks after timer, player input ignored
+- `GameOver { winner }` → Combat ended, winner announced
+
+See [docs/combat-system.md](docs/combat-system.md) for complete details.
 
 ## 🔧 Development
 
@@ -280,6 +296,7 @@ cargo check --all-features
 - **[CLAUDE.md](CLAUDE.md)** - AI assistant configuration and development guidelines
 - **[CLAUDE_NOTES.md](CLAUDE_NOTES.md)** - Original design document and planning notes
 - **[docs/architecture.md](docs/architecture.md)** - Architecture overview
+- **[docs/combat-system.md](docs/combat-system.md)** - Turn-based combat system details
 - **[docs/fsharp-integration.md](docs/fsharp-integration.md)** - F# integration details
 
 ### Consolidated Documentation
@@ -315,9 +332,9 @@ cargo check --all-features
    - No on-screen HP display
    - No visual combat feedback
 
-6. **No Monster AI** (Issue #7)
-   - Currently player-only combat
-   - Monster needs decision-making logic
+6. **Basic Monster AI** (Issue #7)
+   - Monster uses simple auto-attack strategy
+   - Advanced AI behaviors planned (Issue #11)
 
 ### Roadmap
 
@@ -326,7 +343,8 @@ See [GitHub Issues](https://github.com/raibid-labs/grimware/issues?q=is%3Aissue+
 **Phase 1** (Current):
 - ✅ Basic Bevy app with ECS setup
 - ✅ Domain types (Character, Stats, Ability, CombatEvent)
-- ✅ Simple combat logic
+- ✅ Turn-based combat system (Issue #14)
+- ✅ Basic monster AI (auto-attack)
 - ✅ F# type mirrors
 
 **Phase 2** (In Progress):
