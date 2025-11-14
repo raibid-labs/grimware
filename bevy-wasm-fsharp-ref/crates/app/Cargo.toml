@@ -1,0 +1,8 @@
+[package]
+name = "bevy-wasm-fsharp-ref-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.15"
+bevy-wasm-fsharp-ref-logic = { path = "../logic-fsharp" }
