@@ -64,6 +64,21 @@ Terminal UI library that works seamlessly in both native terminals and web brows
 
 ---
 
+### 5. [Bevy WASM F#](./bevy-wasm-fsharp-ref/)
+**F# → Rust → Bevy → WASM Game Development Path**
+
+Reference implementation demonstrating F# game logic transpiled to Rust and deployed as Bevy games (native + WASM).
+
+- **Technology**: F#, Rust, Bevy 0.16+, Fable, fsrs, WASM
+- **Key Features**: Functional game logic, type-safe domain modeling, dual-target deployment
+- **Platform**: Desktop (native) + Web browsers (WASM)
+- **Documentation**: [docs/bevy-wasm-fsharp.md](./docs/bevy-wasm-fsharp.md)
+- **Quick Start**: [bevy-wasm-fsharp-ref/README.md](./bevy-wasm-fsharp-ref/README.md)
+
+**Use Cases**: F# game development, functional game logic, WASM games, type-safe game systems
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -86,6 +101,7 @@ cd bevy-mcp-ref          # Game development with AI
 cd bevy-mcp-ratatui-ref  # Terminal 3D rendering
 cd tauri-ref             # Cross-platform apps
 cd webatui-ref           # Terminal UI library
+cd bevy-wasm-fsharp-ref  # F# → Rust → Bevy → WASM
 ```
 
 ## 📖 Documentation
@@ -103,6 +119,7 @@ cd webatui-ref           # Terminal UI library
 - **[Bevy MCP Ratatui Guide](./docs/bevy-mcp-ratatui.md)** - Terminal 3D rendering
 - **[Tauri Guide](./docs/tauri.md)** - Cross-platform application development
 - **[WebATUI Guide](./docs/webatui.md)** - Terminal UI library usage
+- **[Bevy WASM F# Guide](./docs/bevy-wasm-fsharp.md)** - F# to Rust game development
 
 ### Specialized Topics
 
@@ -115,6 +132,7 @@ cd webatui-ref           # Terminal UI library
 
 ### Languages
 - **Rust** - Primary language for all implementations
+- **F#** - Game logic (bevy-wasm-fsharp-ref)
 - **JavaScript/TypeScript** - Frontend (Tauri, WebATUI)
 
 ### Frameworks & Libraries
@@ -140,6 +158,9 @@ cd webatui-ref           # Terminal UI library
 | Browser-based TUI | [WebATUI](./webatui-ref/) |
 | Headless game testing | [Bevy MCP Ratatui](./bevy-mcp-ratatui-ref/) |
 | Live code editing | [Bevy MCP](./bevy-mcp-ref/) |
+| F# game development | [Bevy WASM F#](./bevy-wasm-fsharp-ref/) |
+| WASM game deployment | [Bevy WASM F#](./bevy-wasm-fsharp-ref/) |
+| Functional game logic | [Bevy WASM F#](./bevy-wasm-fsharp-ref/) |
 
 ## 🤝 Contributing
 

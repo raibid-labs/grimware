@@ -2,12 +2,13 @@
 
 ## Repository Overview
 
-**Grimware** is a reference implementation library containing four distinct Rust-based projects that demonstrate best practices for modern development:
+**Grimware** is a reference implementation library containing five distinct projects that demonstrate best practices for modern development:
 
 1. **bevy-mcp-ref** - AI-assisted game development with Bevy + BRP
 2. **bevy-mcp-ratatui-ref** - 3D game development in terminal with AI control
 3. **tauri-ref** - Cross-platform desktop/mobile applications
 4. **webatui-ref** - Terminal UI library (native + WASM)
+5. **bevy-wasm-fsharp-ref** - F# → Rust → Bevy → WASM game development
 
 ## Project Structure
 
@@ -17,6 +18,7 @@ grimware/
 ├── bevy-mcp-ratatui-ref/  # Terminal 3D rendering
 ├── tauri-ref/             # Cross-platform apps
 ├── webatui-ref/           # Terminal UI library
+├── bevy-wasm-fsharp-ref/  # F# → Rust → Bevy → WASM
 ├── docs/                  # Consolidated documentation
 │   ├── getting-started.md
 │   ├── bevy-mcp.md
@@ -124,6 +126,26 @@ bacon example-basic
 ```
 
 **This is a library** - no binary, only examples.
+
+### Bevy WASM F# (`bevy-wasm-fsharp-ref/`)
+
+```bash
+# Run natively
+cargo run -p app
+just run
+
+# Build WASM
+just build-wasm
+
+# Serve WASM locally
+just serve-wasm
+
+# Build and serve in one command
+just wasm
+```
+
+**F# → Rust transpilation**: Currently using hand-written Rust; fsrs integration pending (see issue #5).
+**Game controls**: Space to attack, ESC to quit.
 
 ## AI-Assisted Development Patterns
 
@@ -281,6 +303,12 @@ Help users choose the right project:
 **"I want to visualize data in the terminal"**
 → Use `webatui-ref` (examples include dashboard)
 
+**"I want to write game logic in F# and deploy as WASM"**
+→ Use `bevy-wasm-fsharp-ref`
+
+**"I want functional programming for games"**
+→ Use `bevy-wasm-fsharp-ref`
+
 ## Important Notes
 
 ### Multi-Project Repository
@@ -362,11 +390,13 @@ cargo test --features <flags>
 - [bevy-mcp-ratatui-ref/README.md](bevy-mcp-ratatui-ref/README.md)
 - [tauri-ref/README.md](tauri-ref/README.md)
 - [webatui-ref/README.md](webatui-ref/README.md)
+- [bevy-wasm-fsharp-ref/README.md](bevy-wasm-fsharp-ref/README.md)
 
 **Project CLAUDE.md files** (for project-specific details):
 - [bevy-mcp-ref/CLAUDE.md](bevy-mcp-ref/CLAUDE.md)
 - [bevy-mcp-ratatui-ref/CLAUDE.md](bevy-mcp-ratatui-ref/CLAUDE.md)
 - [tauri-ref/CLAUDE.md](tauri-ref/CLAUDE.md)
+- [bevy-wasm-fsharp-ref/CLAUDE.md](bevy-wasm-fsharp-ref/CLAUDE.md)
 
 ## Repository Maintenance
 

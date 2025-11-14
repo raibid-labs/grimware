@@ -7,7 +7,7 @@ pub struct Stats {
     pub defense: i32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, bevy::prelude::Component)]
 pub struct Character {
     pub name: String,
     pub hp: i32,
@@ -63,7 +63,11 @@ pub struct CombatEvent {
     pub defender_hp_after: i32,
 }
 
-pub fn compute_attack(attacker: &Character, defender: &Character, ability: &Ability) -> CombatEvent {
+pub fn compute_attack(
+    attacker: &Character,
+    defender: &Character,
+    ability: &Ability,
+) -> CombatEvent {
     let raw = attacker.stats.attack + ability.power;
     let dmg = (raw - defender.stats.defense).max(1);
     let hp_after = defender.hp - dmg;

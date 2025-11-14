@@ -16,7 +16,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 
     commands.spawn((
         Player,
@@ -34,7 +34,7 @@ fn setup(mut commands: Commands) {
 }
 
 fn tick_combat(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut players: Query<&mut logic::Character, With<Player>>,
     mut monsters: Query<&mut logic::Character, (With<Monster>, Without<Player>)>,
 ) {
@@ -42,14 +42,14 @@ fn tick_combat(
         return;
     }
 
-    let mut player = match players.get_single_mut() {
-        Ok(p) => p,
-        Err(_) => return,
+    let player = match players.iter_mut().next() {
+        Some(p) => p,
+        None => return,
     };
 
-    let mut monster = match monsters.get_single_mut() {
-        Ok(m) => m,
-        Err(_) => return,
+    let mut monster = match monsters.iter_mut().next() {
+        Some(m) => m,
+        None => return,
     };
 
     let ability = logic::Ability::basic_attack();

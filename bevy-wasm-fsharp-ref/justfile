@@ -1,0 +1,175 @@
+# Bevy WASM F# Reference - Justfile
+# Utility commands for building and running the game
+
+# Default recipe - show available commands
+default:
+    @just --list
+
+# Build all crates in debug mode
+build:
+    cargo build
+
+# Build the app in debug mode
+build-app:
+    cargo build -p app
+
+# Build the logic crate in debug mode
+build-logic:
+    cargo build -p logic-fsharp
+
+# Build in release mode
+build-release:
+    cargo build --release
+
+# Build WASM bundle
+build-wasm:
+    @echo "Building WASM bundle..."
+    cargo build -p app --target wasm32-unknown-unknown --release
+    @echo "Running wasm-bindgen..."
+    wasm-bindgen --out-dir web/pkg --target web target/wasm32-unknown-unknown/release/app.wasm
+    @echo "✅ WASM build complete! Files in web/pkg/"
+
+# Run the app (native)
+run:
+    cargo run -p app
+
+# Run the app in release mode
+run-release:
+    cargo run -p app --release
+
+# Run all tests
+test:
+    cargo test --all
+
+# Run tests with all features
+test-all:
+    cargo test --all-features
+
+# Run tests for specific crate
+test-crate crate:
+    cargo test -p {{crate}}
+
+# Check code without building
+check:
+    cargo check --all-features
+
+# Format code with rustfmt
+fmt:
+    cargo fmt --all
+
+# Check formatting without changing files
+fmt-check:
+    cargo fmt --all --check
+
+# Run clippy linter
+lint:
+    cargo clippy --all-features
+
+# Run clippy with strict warnings
+lint-strict:
+    cargo clippy --all-features -- -D warnings
+
+# Clean build artifacts
+clean:
+    cargo clean
+    rm -rf web/pkg
+
+# Full check: format, lint, test, build
+check-all: fmt lint test build
+    @echo "✅ All checks passed!"
+
+# Development workflow: clean, build, run
+dev: clean build run
+
+# Production build: clean, format, lint, test, build release
+prod: clean fmt lint test build-release
+    @echo "✅ Production build complete!"
+
+# Watch and rebuild on file changes (requires cargo-watch)
+watch:
+    cargo watch -x 'run -p app'
+
+# Watch and run tests on file changes
+watch-test:
+    cargo watch -x 'test --all'
+
+# Serve WASM build locally (requires Python 3)
+serve-wasm:
+    @echo "Serving WASM on http://localhost:8000"
+    @echo "Press Ctrl+C to stop"
+    cd web && python3 -m http.server 8000
+
+# Build WASM and serve in one command
+wasm: build-wasm
+    @echo ""
+    @echo "WASM build complete! Starting server..."
+    @just serve-wasm
+
+# Install development dependencies
+install-deps:
+    cargo install cargo-watch
+    cargo install wasm-bindgen-cli
+    @echo "✅ Development dependencies installed!"
+
+# Show project information
+info:
+    @echo "Bevy WASM F# Reference Implementation"
+    @echo "====================================="
+    @echo "F# → Rust → Bevy → WASM path demonstration"
+    @echo ""
+    @echo "Bevy Version: 0.16"
+    @echo "Rust Target: Native + WASM (wasm32-unknown-unknown)"
+    @echo "F# Transpiler: Fable + fsrs (future integration)"
+    @echo ""
+    @cargo --version
+    @rustc --version
+
+# Generate documentation
+docs:
+    cargo doc --no-deps --open
+
+# Generate documentation with all features
+docs-all:
+    cargo doc --all-features --no-deps --open
+
+# Run the app with debug logging
+debug:
+    RUST_LOG=debug cargo run -p app
+
+# Run the app with trace logging
+trace:
+    RUST_LOG=trace cargo run -p app
+
+# Check if WASM target is installed
+check-wasm-target:
+    @rustup target list --installed | grep -q wasm32-unknown-unknown || \
+    (echo "⚠️  WASM target not installed. Installing..." && \
+    rustup target add wasm32-unknown-unknown)
+
+# Setup for WASM development
+setup-wasm: check-wasm-target install-deps
+    @echo "✅ WASM development environment ready!"
+
+# Run F# transpilation (placeholder for future fsrs integration)
+transpile-fsharp:
+    @echo "⚠️  F# transpilation not yet integrated."
+    @echo "This will use Fable + fsrs to generate Rust code from F#."
+    @echo "See issue #5: https://github.com/raibid-labs/grimware/issues/5"
+
+# Count lines of code
+loc:
+    @echo "Lines of code:"
+    @echo "Rust:"
+    @find crates -name "*.rs" | xargs wc -l | tail -1
+    @echo "F#:"
+    @find fsharp -name "*.fs" | xargs wc -l | tail -1 || echo "0 (not implemented yet)"
+
+# Show TODO items in code
+todos:
+    @echo "TODO items in code:"
+    @rg "TODO|FIXME|XXX|HACK" crates/ fsharp/ || echo "No TODOs found!"
+
+# Benchmark (placeholder)
+bench:
+    @echo "⚠️  Benchmarks not yet implemented"
+    @echo "Add benchmarks with: cargo bench"
