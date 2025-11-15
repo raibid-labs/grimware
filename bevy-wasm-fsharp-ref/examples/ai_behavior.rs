@@ -268,7 +268,7 @@ fn main() {
             let strategy1 = &strategies[i];
             let strategy2 = &strategies[j];
 
-            print!("{} vs {}: ", strategy1.0, strategy2.0);
+            eprint!("{} vs {}: ", strategy1.0, strategy2.0);
 
             let mut strategy1_wins = 0;
             let mut strategy2_wins = 0;
