@@ -26,7 +26,6 @@
 //! This functional approach aligns perfectly with F# → Rust transpilation.
 
 use bevy_wasm_fsharp_ref_logic::{Ability, Character, compute_attack};
-use std::io::{self, Write};
 
 /// AI Strategy trait - defines how an AI makes decisions
 trait AiStrategy {
@@ -156,17 +155,17 @@ fn simulate_combat(
     const MAX_TURNS: i32 = 20; // Prevent infinite loops
 
     if verbose {
-        println!("\n=== Combat: {} ({}) vs {} ({}) ===",
+        eprintln!("\n=== Combat: {} ({}) vs {} ({}) ===",
             ai1_char.name, ai1_strategy.name(),
             ai2_char.name, ai2_strategy.name());
-        println!("Starting HP: {} vs {}\n", ai1_char.hp, ai2_char.hp);
+        eprintln!("Starting HP: {} vs {}\n", ai1_char.hp, ai2_char.hp);
     }
 
     while ai1_char.hp > 0 && ai2_char.hp > 0 && turn < MAX_TURNS {
         turn += 1;
 
         if verbose {
-            println!("Turn {}:", turn);
+            eprintln!("Turn {}:", turn);
         }
 
         // AI 1's turn
@@ -175,13 +174,13 @@ fn simulate_combat(
         ai2_char.hp = event1.defender_hp_after;
 
         if verbose {
-            println!("  {} uses {} → {} damage (Opponent HP: {})",
+            eprintln!("  {} uses {} → {} damage (Opponent HP: {})",
                 ai1_char.name, ability1.name, event1.damage, ai2_char.hp);
         }
 
         if ai2_char.hp <= 0 {
             if verbose {
-                println!("\n✓ {} wins in {} turns!\n", ai1_char.name, turn);
+                eprintln!("\n✓ {} wins in {} turns!\n", ai1_char.name, turn);
             }
             return ai1_char.name.clone();
         }
@@ -192,20 +191,20 @@ fn simulate_combat(
         ai1_char.hp = event2.defender_hp_after;
 
         if verbose {
-            println!("  {} uses {} → {} damage (Opponent HP: {})\n",
+            eprintln!("  {} uses {} → {} damage (Opponent HP: {})\n",
                 ai2_char.name, ability2.name, event2.damage, ai1_char.hp);
         }
 
         if ai1_char.hp <= 0 {
             if verbose {
-                println!("✓ {} wins in {} turns!\n", ai2_char.name, turn);
+                eprintln!("✓ {} wins in {} turns!\n", ai2_char.name, turn);
             }
             return ai2_char.name.clone();
         }
     }
 
     if verbose {
-        println!("Combat reached turn limit ({} turns)\n", MAX_TURNS);
+        eprintln!("Combat reached turn limit ({} turns)\n", MAX_TURNS);
     }
 
     // If we hit max turns, winner is whoever has more HP
@@ -217,29 +216,27 @@ fn simulate_combat(
 }
 
 fn main() {
-    println!("╔════════════════════════════════════════╗");
-    println!("║   AI Behavior Example                  ║");
-    println!("║   Strategic Decision Making            ║");
-    println!("╚════════════════════════════════════════╝\n");
+    eprintln!("╔════════════════════════════════════════╗");
+    eprintln!("║   AI Behavior Example                  ║");
+    eprintln!("║   Strategic Decision Making            ║");
+    eprintln!("╚════════════════════════════════════════╝\n");
 
     // ====================
     // Section 1: AI Strategy Overview
     // ====================
 
-    println!("=== 1. AI Strategies ===\n");
-    println!("Available AI strategies:");
-    println!("  • Aggressive: Always uses strongest attacks");
-    println!("  • Defensive: Focuses on survival, heals when low HP");
-    println!("  • Balanced: Adapts based on opponent's HP percentage");
-    println!("  • Smart: Considers multiple factors (HP, defense, state)");
-    io::stdout().flush().unwrap();
+    eprintln!("=== 1. AI Strategies ===\n");
+    eprintln!("Available AI strategies:");
+    eprintln!("  • Aggressive: Always uses strongest attacks");
+    eprintln!("  • Defensive: Focuses on survival, heals when low HP");
+    eprintln!("  • Balanced: Adapts based on opponent's HP percentage");
+    eprintln!("  • Smart: Considers multiple factors (HP, defense, state)");
 
     // ====================
     // Section 2: Single Combat Demo
     // ====================
 
-    println!("\n=== 2. Detailed Combat Demo ===");
-    io::stdout().flush().unwrap();
+    eprintln!("\n=== 2. Detailed Combat Demo ===");
 
     let fighter1 = Character::new_player("Warrior");
     let fighter2 = Character::new_monster("Goblin");
@@ -253,9 +250,8 @@ fn main() {
     // Section 3: AI Tournament
     // ====================
 
-    println!("\n=== 3. AI Strategy Tournament ===\n");
-    println!("Testing each AI strategy against all others (best of 5):\n");
-    io::stdout().flush().unwrap();
+    eprintln!("\n=== 3. AI Strategy Tournament ===\n");
+    eprintln!("Testing each AI strategy against all others (best of 5):\n");
 
     let strategies: Vec<(&str, Box<dyn AiStrategy>)> = vec![
         ("Aggressive", Box::new(AggressiveAi)),
@@ -298,49 +294,48 @@ fn main() {
             }
 
             if strategy1_wins > strategy2_wins {
-                println!("✓ {} wins {}-{}", strategy1.0, strategy1_wins, strategy2_wins);
+                eprintln!("✓ {} wins {}-{}", strategy1.0, strategy1_wins, strategy2_wins);
                 wins[i] += 1;
             } else {
-                println!("✓ {} wins {}-{}", strategy2.0, strategy2_wins, strategy1_wins);
+                eprintln!("✓ {} wins {}-{}", strategy2.0, strategy2_wins, strategy1_wins);
                 wins[j] += 1;
             }
-            io::stdout().flush().unwrap();
         }
     }
 
-    println!("\n=== Tournament Results ===\n");
+    eprintln!("\n=== Tournament Results ===\n");
     let mut results: Vec<_> = strategies.iter().zip(wins.iter()).collect();
     results.sort_by(|a, b| b.1.cmp(a.1));
 
     for (rank, (strategy, win_count)) in results.iter().enumerate() {
-        println!("{}. {} - {} wins", rank + 1, strategy.0, win_count);
+        eprintln!("{}. {} - {} wins", rank + 1, strategy.0, win_count);
     }
 
     // ====================
     // Section 4: Implementing AI in F#
     // ====================
 
-    println!("\n=== 4. F# Implementation Pattern ===\n");
-    println!("To implement AI in F# (then transpile to Rust):\n");
-    println!("```fsharp");
-    println!("type AiStrategy = Character -> Character -> Ability");
-    println!();
-    println!("let aggressiveAi (aiChar: Character) (opponent: Character) : Ability =");
-    println!("    {{ Name = \"Heavy Attack\"; Power = 15 }}");
-    println!();
-    println!("let balancedAi (aiChar: Character) (opponent: Character) : Ability =");
-    println!("    let hpPercent = (opponent.Hp * 100) / opponent.Stats.Hp");
-    println!("    if hpPercent > 70 then");
-    println!("        {{ Name = \"Power Attack\"; Power = 12 }}");
-    println!("    else");
-    println!("        basicAttack");
-    println!("```\n");
+    eprintln!("\n=== 4. F# Implementation Pattern ===\n");
+    eprintln!("To implement AI in F# (then transpile to Rust):\n");
+    eprintln!("```fsharp");
+    eprintln!("type AiStrategy = Character -> Character -> Ability");
+    eprintln!();
+    eprintln!("let aggressiveAi (aiChar: Character) (opponent: Character) : Ability =");
+    eprintln!("    {{ Name = \"Heavy Attack\"; Power = 15 }}");
+    eprintln!();
+    eprintln!("let balancedAi (aiChar: Character) (opponent: Character) : Ability =");
+    eprintln!("    let hpPercent = (opponent.Hp * 100) / opponent.Stats.Hp");
+    eprintln!("    if hpPercent > 70 then");
+    eprintln!("        {{ Name = \"Power Attack\"; Power = 12 }}");
+    eprintln!("    else");
+    eprintln!("        basicAttack");
+    eprintln!("```\n");
 
-    println!("This F# code transpiles to Rust functions that can be called from Bevy systems!\n");
+    eprintln!("This F# code transpiles to Rust functions that can be called from Bevy systems!\n");
 
-    println!("📚 Next Steps:");
-    println!("  - Implement AI functions in fsharp/GameLogic.fs");
-    println!("  - Add status effects and buffs");
-    println!("  - Create more complex decision trees");
-    println!("  - Try: cargo run --example fsharp_integration");
+    eprintln!("📚 Next Steps:");
+    eprintln!("  - Implement AI functions in fsharp/GameLogic.fs");
+    eprintln!("  - Add status effects and buffs");
+    eprintln!("  - Create more complex decision trees");
+    eprintln!("  - Try: cargo run --example fsharp_integration");
 }
