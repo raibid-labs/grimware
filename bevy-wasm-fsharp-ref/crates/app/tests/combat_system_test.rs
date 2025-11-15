@@ -198,22 +198,22 @@ mod combat_tests {
     }
 }
 
-/// Manual Testing Checklist
-///
-/// Run `cargo run` and verify each of these behaviors:
-///
-/// [ ] 1. Game starts with ">>> YOUR TURN <<<" message
-/// [ ] 2. Pressing Space during player turn executes attack
-/// [ ] 3. After player attack, state changes to ">>> MONSTER'S TURN <<<"
-/// [ ] 4. Monster attacks automatically after ~1 second delay
-/// [ ] 5. After monster attack, state changes back to ">>> YOUR TURN <<<"
-/// [ ] 6. All combat events are logged to console with proper format
-/// [ ] 7. HP values are displayed correctly after each attack
-/// [ ] 8. Player can defeat monster (press Space 2 times)
-/// [ ] 9. Monster can defeat player (let it attack 4 times without fighting back)
-/// [ ] 10. Game over message appears when either combatant reaches 0 HP
-/// [ ] 11. Winner is announced correctly
-/// [ ] 12. No more turns happen after game over
-/// [ ] 13. Input is ignored during monster turn and game over
-/// [ ] 14. Turn indicators update correctly throughout combat
-/// [ ] 15. Combat log shows all expected messages in order
+// Manual Testing Checklist
+//
+// Run `cargo run` and verify each of these behaviors:
+//
+// [ ] 1. Game starts with ">>> YOUR TURN <<<" message
+// [ ] 2. Pressing Space during player turn executes attack
+// [ ] 3. After player attack, state changes to ">>> MONSTER'S TURN <<<"
+// [ ] 4. Monster attacks automatically after ~1 second delay
+// [ ] 5. After monster attack, state changes back to ">>> YOUR TURN <<<"
+// [ ] 6. All combat events are logged to console with proper format
+// [ ] 7. HP values are displayed correctly after each attack
+// [ ] 8. Player can defeat monster (press Space 2 times)
+// [ ] 9. Monster can defeat player (let it attack 4 times without fighting back)
+// [ ] 10. Game over message appears when either combatant reaches 0 HP
+// [ ] 11. Winner is announced correctly
+// [ ] 12. No more turns happen after game over
+// [ ] 13. Input is ignored during monster turn and game over
+// [ ] 14. Turn indicators update correctly throughout combat
+// [ ] 15. Combat log shows all expected messages in order

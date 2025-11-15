@@ -6,6 +6,28 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+# Examples - educational code samples demonstrating key concepts
+# Run with: cargo run -p app --example <name>
+[[example]]
+name = "minimal_combat"
+path = "../../examples/minimal_combat.rs"
+
+[[example]]
+name = "custom_abilities"
+path = "../../examples/custom_abilities.rs"
+
+[[example]]
+name = "ai_behavior"
+path = "../../examples/ai_behavior.rs"
+
+[[example]]
+name = "fsharp_integration"
+path = "../../examples/fsharp_integration.rs"
+
+[[example]]
+name = "headless_simulation"
+path = "../../examples/headless_simulation.rs"
+
 [dependencies]
 bevy = { version = "0.15", default-features = true }
 bevy-wasm-fsharp-ref-logic = { path = "../logic-fsharp" }

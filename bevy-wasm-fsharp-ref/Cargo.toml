@@ -1,3 +1,13 @@
 [workspace]
 members = ["crates/app", "crates/logic-fsharp"]
 resolver = "2"
+
+# Optimized profile for WASM builds
+# Targets minimal bundle size while maintaining good runtime performance
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"           # Optimize for size
+lto = true                # Link-time optimization
+codegen-units = 1         # Single codegen unit for better optimization
+strip = true              # Strip debug symbols
+panic = "abort"           # Reduce binary size by using abort on panic

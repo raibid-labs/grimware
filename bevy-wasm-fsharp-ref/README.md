@@ -290,6 +290,121 @@ cargo test -- --nocapture
 cargo check --all-features
 ```
 
+## 📖 Examples
+
+The project includes educational examples demonstrating key concepts. Each example is heavily commented and focuses on a specific aspect of the system.
+
+### Running Examples
+
+```bash
+# Run any example
+cargo run --example <example_name>
+
+# Example:
+cargo run --example minimal_combat
+```
+
+### Available Examples
+
+#### 1. Minimal Combat (`minimal_combat.rs`)
+
+The simplest possible combat simulation. Perfect for understanding the basics.
+
+**What you'll learn:**
+- Creating characters (player and monster)
+- Creating and using abilities
+- Executing combat with `compute_attack()`
+- Basic turn-based combat loop
+
+**Run:** `cargo run --example minimal_combat`
+
+**~50 lines** - Shows the absolute minimum code needed for combat.
+
+---
+
+#### 2. Custom Abilities (`custom_abilities.rs`)
+
+Demonstrates how to create custom abilities with different power levels.
+
+**What you'll learn:**
+- Creating custom abilities
+- How ability power affects damage
+- Different ability types (weak, standard, powerful)
+- Testing damage scaling
+- Fighting enemies with high defense
+
+**Run:** `cargo run --example custom_abilities`
+
+**~80 lines** - Shows ability system extensibility and damage calculations.
+
+---
+
+#### 3. AI Behavior (`ai_behavior.rs`)
+
+Shows how to implement AI decision-making patterns and strategies.
+
+**What you'll learn:**
+- Implementing AI decision trees
+- Different AI personalities (aggressive, defensive, balanced, smart)
+- State-based ability selection
+- Running AI tournaments
+- Testing strategies against each other
+
+**Run:** `cargo run --example ai_behavior`
+
+**~100 lines** - Demonstrates strategic AI implementation patterns.
+
+---
+
+#### 4. F# Integration (`fsharp_integration.rs`)
+
+Explains the F# → Rust → Bevy workflow and type mapping.
+
+**What you'll learn:**
+- F# to Rust type mapping conventions
+- How to prepare F# code for fsrs transpilation
+- The development workflow for updating game logic
+- Type alignment requirements
+- Adding new features
+
+**Run:** `cargo run --example fsharp_integration`
+
+**~60 lines** - Documents the F# integration workflow with examples.
+
+---
+
+#### 5. Headless Simulation (`headless_simulation.rs`)
+
+Demonstrates running combat without rendering (perfect for testing and benchmarking).
+
+**What you'll learn:**
+- Running Bevy apps headless (no window)
+- Using MinimalPlugins for logic-only applications
+- Batch simulation and statistics gathering
+- Performance benchmarking techniques
+
+**Run:** `cargo run --example headless_simulation`
+
+**~70 lines** - Shows how to run 100+ simulations for testing and analysis.
+
+---
+
+### Learning Path
+
+**New to the project?** Follow this order:
+1. `minimal_combat` - Understand the basics
+2. `custom_abilities` - Explore ability customization
+3. `ai_behavior` - Learn AI implementation
+4. `fsharp_integration` - Understand the F# workflow
+5. `headless_simulation` - Testing and benchmarking
+
+**Each example includes:**
+- Detailed documentation comments
+- Clear section markers
+- Console output showing results
+- Links to related documentation
+- Suggestions for next steps
+
 ## 📚 Documentation
 
 ### Project Documentation
@@ -447,6 +562,25 @@ MIT License - See LICENSE file for details
 - [Fable](https://fable.io/) - F# to JavaScript compiler
 
 ## 🎓 Learning Path
+
+### 📖 Comprehensive Tutorial Series
+
+**NEW: [Complete F# → Rust → Bevy Tutorial](docs/tutorial/README.md)**
+
+A step-by-step guide from zero to deployed game:
+1. [Getting Started](docs/tutorial/01-getting-started.md) - Environment setup
+2. [Understanding F#](docs/tutorial/02-understanding-fsharp.md) - F# for game logic
+3. [Domain Modeling](docs/tutorial/03-domain-modeling.md) - Type-driven design
+4. [Rust Implementation](docs/tutorial/04-rust-implementation.md) - Translating F# to Rust
+5. [Bevy Integration](docs/tutorial/05-bevy-integration.md) - ECS and systems
+6. [Combat System](docs/tutorial/06-combat-system.md) - Turn-based combat
+7. [WASM Deployment](docs/tutorial/07-wasm-deployment.md) - Web deployment
+8. [Advanced Topics](docs/tutorial/08-advanced-topics.md) - AI, optimization
+9. [Troubleshooting](docs/tutorial/troubleshooting.md) - Common issues
+
+**Time to complete**: ~4-5 hours total
+
+### Quick Start Paths
 
 **For F# Developers:**
 1. Start with native build: `just run`

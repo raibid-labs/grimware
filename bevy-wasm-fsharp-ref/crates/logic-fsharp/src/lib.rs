@@ -384,13 +384,150 @@ impl Ability {
             power: 5,
         }
     }
+
+    /// Creates a powerful attack ability with high damage and longer cooldown.
+    pub fn powerful_attack() -> Self {
+        Self {
+            name: "Powerful Attack".into(),
+            power: 12,
+        }
+    }
+
+    /// Creates a healing ability (negative power = heal).
+    pub fn heal() -> Self {
+        Self {
+            name: "Heal".into(),
+            power: -8,
+        }
+    }
+
+    /// Creates a quick strike ability with low damage but very short cooldown.
+    pub fn quick_strike() -> Self {
+        Self {
+            name: "Quick Strike".into(),
+            power: 3,
+        }
+    }
+}
+
+/// An ability slot with cooldown tracking.
+///
+/// Represents an ability that can be used with a cooldown timer.
+/// The cooldown prevents the ability from being used repeatedly without delay.
+///
+/// # F# Equivalent
+///
+/// ```fsharp
+/// type AbilitySlot =
+///     { Ability: Ability
+///       CooldownMax: float
+///       CooldownCurrent: float }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize, bevy::prelude::Component)]
+pub struct AbilitySlot {
+    /// The ability contained in this slot.
+    pub ability: Ability,
+
+    /// Maximum cooldown time in seconds.
+    pub cooldown_max: f32,
+
+    /// Current cooldown remaining in seconds (0 = ready to use).
+    pub cooldown_current: f32,
+}
+
+impl AbilitySlot {
+    /// Creates a new ability slot with the specified ability and cooldown.
+    pub fn new(ability: Ability, cooldown_max: f32) -> Self {
+        Self {
+            ability,
+            cooldown_max,
+            cooldown_current: 0.0,
+        }
+    }
+
+    /// Checks if the ability is ready to use (cooldown finished).
+    pub fn is_ready(&self) -> bool {
+        self.cooldown_current <= 0.0
+    }
+
+    /// Triggers the ability's cooldown after use.
+    pub fn use_ability(&mut self) {
+        self.cooldown_current = self.cooldown_max;
+    }
+
+    /// Ticks down the cooldown by the given delta time.
+    pub fn tick(&mut self, delta: f32) {
+        self.cooldown_current = (self.cooldown_current - delta).max(0.0);
+    }
+
+    /// Gets the cooldown progress as a percentage (0.0 to 1.0).
+    /// 0.0 = ready, 1.0 = just used.
+    pub fn cooldown_progress(&self) -> f32 {
+        if self.cooldown_max <= 0.0 {
+            0.0
+        } else {
+            (self.cooldown_current / self.cooldown_max).clamp(0.0, 1.0)
+        }
+    }
+}
+
+/// A set of abilities for a character.
+///
+/// Contains multiple ability slots that can be used in combat.
+///
+/// # F# Equivalent
+///
+/// ```fsharp
+/// type AbilitySet =
+///     { Abilities: AbilitySlot list }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize, bevy::prelude::Component)]
+pub struct AbilitySet {
+    /// List of ability slots.
+    pub abilities: Vec<AbilitySlot>,
+}
+
+impl AbilitySet {
+    /// Creates a default player ability set with 4 abilities.
+    pub fn player_default() -> Self {
+        Self {
+            abilities: vec![
+                AbilitySlot::new(Ability::basic_attack(), 0.5),
+                AbilitySlot::new(Ability::powerful_attack(), 3.0),
+                AbilitySlot::new(Ability::heal(), 5.0),
+                AbilitySlot::new(Ability::quick_strike(), 0.2),
+            ],
+        }
+    }
+
+    /// Creates a default monster ability set.
+    pub fn monster_default() -> Self {
+        Self {
+            abilities: vec![
+                AbilitySlot::new(Ability::basic_attack(), 1.0),
+                AbilitySlot::new(Ability::quick_strike(), 0.5),
+            ],
+        }
+    }
+
+    /// Ticks all ability cooldowns.
+    pub fn tick_all(&mut self, delta: f32) {
+        for slot in &mut self.abilities {
+            slot.tick(delta);
+        }
+    }
+
+    /// Gets a ready ability by index, if available.
+    pub fn get_ready_ability(&mut self, index: usize) -> Option<&mut AbilitySlot> {
+        self.abilities.get_mut(index).filter(|slot| slot.is_ready())
+    }
 }
 
 /// The result of a combat action.
 ///
 /// A `CombatEvent` records what happened when one character attacked another.
-/// It contains the names of both participants, the damage dealt, and the defender's
-/// remaining HP after the attack.
+/// It contains the names of both participants, the damage dealt, the defender's
+/// remaining HP after the attack, and which ability was used.
 ///
 /// # F# Equivalent
 ///
@@ -399,7 +536,8 @@ impl Ability {
 ///     { AttackerName: string
 ///       DefenderName: string
 ///       Damage: int
-///       DefenderHpAfter: int }
+///       DefenderHpAfter: int
+///       AbilityUsed: string }
 /// ```
 ///
 /// # Design Notes
@@ -407,6 +545,7 @@ impl Ability {
 /// - Events are immutable records of what happened
 /// - The defender's HP must be manually updated based on `defender_hp_after`
 /// - Events can be logged, displayed in UI, or used for AI decision-making
+/// - Damage can be negative for healing abilities
 ///
 /// # Examples
 ///
@@ -419,8 +558,9 @@ impl Ability {
 ///
 /// let event = compute_attack(&player, &monster, &ability);
 ///
-/// println!("{} attacked {} for {} damage! ({} HP remaining)",
+/// println!("{} used {} on {} for {} damage! ({} HP remaining)",
 ///          event.attacker_name,
+///          event.ability_used,
 ///          event.defender_name,
 ///          event.damage,
 ///          event.defender_hp_after);
@@ -434,11 +574,15 @@ pub struct CombatEvent {
     pub defender_name: String,
 
     /// Amount of damage dealt (after defense calculation).
+    /// Negative damage means healing.
     pub damage: i32,
 
     /// Defender's remaining HP after taking damage.
     /// If this is <= 0, the defender is defeated.
     pub defender_hp_after: i32,
+
+    /// Name of the ability that was used.
+    pub ability_used: String,
 }
 
 /// Computes the result of an attack between two characters.
@@ -450,23 +594,31 @@ pub struct CombatEvent {
 ///
 /// ```text
 /// raw_damage = attacker.stats.attack + ability.power
-/// actual_damage = max(1, raw_damage - defender.stats.defense)
+/// actual_damage = max(1, raw_damage - defender.stats.defense)  // For attacks
+/// actual_damage = ability.power  // For healing (negative power)
 /// new_hp = defender.hp - actual_damage
 /// ```
 ///
-/// **Note**: Damage is always at least 1, even if defense exceeds attack power.
+/// **Note**:
+/// - Damage is always at least 1 for attacks, even if defense exceeds attack power.
+/// - Healing abilities (negative power) bypass defense and restore HP directly.
 ///
 /// # F# Equivalent
 ///
 /// ```fsharp
 /// let computeAttack (attacker: Character) (defender: Character) (ability: Ability) : CombatEvent =
 ///     let raw = attacker.Stats.Attack + ability.Power
-///     let dmg = max 1 (raw - defender.Stats.Defense)
+///     let dmg =
+///         if ability.Power < 0 then
+///             ability.Power  // Healing (negative)
+///         else
+///             max 1 (raw - defender.Stats.Defense)
 ///     let hpAfter = defender.Hp - dmg
 ///     { AttackerName = attacker.Name
 ///       DefenderName = defender.Name
 ///       Damage = dmg
-///       DefenderHpAfter = hpAfter }
+///       DefenderHpAfter = hpAfter
+///       AbilityUsed = ability.Name }
 /// ```
 ///
 /// # Arguments
@@ -562,8 +714,17 @@ pub fn compute_attack(
     defender: &Character,
     ability: &Ability,
 ) -> CombatEvent {
-    let raw = attacker.stats.attack + ability.power;
-    let dmg = (raw - defender.stats.defense).max(1);
+    // Handle healing abilities (negative power) differently
+    let dmg = if ability.power < 0 {
+        // Healing: apply directly without defense calculation
+        ability.power
+    } else {
+        // Normal attack: calculate with defense
+        let raw = attacker.stats.attack + ability.power;
+        (raw - defender.stats.defense).max(1)
+    };
+
+    // Calculate new HP (healing reduces damage, thus increases HP)
     let hp_after = defender.hp - dmg;
 
     CombatEvent {
@@ -571,7 +732,253 @@ pub fn compute_attack(
         defender_name: defender.name.clone(),
         damage: dmg,
         defender_hp_after: hp_after,
+        ability_used: ability.name.clone(),
     }
+}
+
+/// Ability type enumeration for AI decision making.
+///
+/// Classifies abilities into categories to help the AI choose appropriate actions.
+///
+/// # F# Equivalent
+///
+/// ```fsharp
+/// type AbilityType =
+///     | BasicAttack
+///     | PowerfulAttack
+///     | Heal
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AbilityType {
+    BasicAttack,
+    PowerfulAttack,
+    Heal,
+}
+
+/// Extended ability with type and cooldown support for AI system.
+///
+/// Wraps an [`Ability`] with metadata needed for intelligent decision making.
+///
+/// # F# Equivalent
+///
+/// ```fsharp
+/// type AbilityWithMeta =
+///     { Ability: Ability
+///       AbilityType: AbilityType
+///       Cooldown: int
+///       CurrentCooldown: int }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AbilityWithMeta {
+    /// The underlying ability.
+    pub ability: Ability,
+
+    /// Type classification for AI decision making.
+    pub ability_type: AbilityType,
+
+    /// Maximum cooldown turns.
+    pub cooldown: i32,
+
+    /// Current cooldown remaining (0 = ready to use).
+    pub current_cooldown: i32,
+}
+
+impl AbilityWithMeta {
+    /// Creates a new ability with metadata.
+    pub fn new(
+        ability: Ability,
+        ability_type: AbilityType,
+        cooldown: i32,
+        current_cooldown: i32,
+    ) -> Self {
+        Self {
+            ability,
+            ability_type,
+            cooldown,
+            current_cooldown,
+        }
+    }
+
+    /// Creates a basic attack with metadata (no cooldown).
+    ///
+    /// # F# Equivalent
+    ///
+    /// ```fsharp
+    /// let basicAttackWithMeta =
+    ///     { Ability = basicAttack
+    ///       AbilityType = BasicAttack
+    ///       Cooldown = 0
+    ///       CurrentCooldown = 0 }
+    /// ```
+    pub fn basic_attack_meta() -> Self {
+        Self::new(Ability::basic_attack(), AbilityType::BasicAttack, 0, 0)
+    }
+
+    /// Creates a powerful attack with metadata (3-turn cooldown).
+    ///
+    /// # F# Equivalent
+    ///
+    /// ```fsharp
+    /// let powerfulAttackWithMeta =
+    ///     { Ability = powerfulAttack
+    ///       AbilityType = PowerfulAttack
+    ///       Cooldown = 3
+    ///       CurrentCooldown = 0 }
+    /// ```
+    pub fn powerful_attack_meta() -> Self {
+        Self::new(
+            Ability::powerful_attack(),
+            AbilityType::PowerfulAttack,
+            3,
+            0,
+        )
+    }
+
+    /// Creates a heal ability with metadata (4-turn cooldown).
+    ///
+    /// # F# Equivalent
+    ///
+    /// ```fsharp
+    /// let healAbilityWithMeta =
+    ///     { Ability = healAbility
+    ///       AbilityType = Heal
+    ///       Cooldown = 4
+    ///       CurrentCooldown = 0 }
+    /// ```
+    pub fn heal_meta() -> Self {
+        Self::new(Ability::heal(), AbilityType::Heal, 4, 0)
+    }
+
+    /// Checks if the ability is ready to use (not on cooldown).
+    pub fn is_ready(&self) -> bool {
+        self.current_cooldown == 0
+    }
+
+    /// Decrements the cooldown by 1 turn (minimum 0).
+    pub fn tick_cooldown(&mut self) {
+        self.current_cooldown = (self.current_cooldown - 1).max(0);
+    }
+
+    /// Activates the ability, setting it on cooldown.
+    pub fn activate(&mut self) {
+        self.current_cooldown = self.cooldown;
+    }
+}
+
+/// AI decision-making function for monster combat behavior.
+///
+/// Implements health-based strategy:
+/// - If monster HP < 30%: Prioritize healing (if available and off cooldown)
+/// - If monster HP > 70%: Use powerful attack (if available and off cooldown)
+/// - Otherwise: Use basic attack (always available)
+///
+/// This creates intelligent but beatable AI that adapts to combat situations.
+///
+/// # F# Equivalent
+///
+/// ```fsharp
+/// let chooseMonsterAction (monster: Character) (_player: Character) (availableAbilities: AbilityWithMeta list) : Ability =
+///     let hpPercent = float monster.Hp / float monster.Stats.Hp
+///     let usableAbilities = availableAbilities |> List.filter (fun a -> a.CurrentCooldown = 0)
+///
+///     if hpPercent < 0.3 then
+///         // Try heal, fall back to basic
+///     elif hpPercent > 0.7 then
+///         // Try powerful, fall back to basic
+///     else
+///         // Basic attack
+/// ```
+///
+/// # Arguments
+///
+/// * `monster` - The monster character making the decision
+/// * `_player` - The player character (currently unused, for future enhancement)
+/// * `available_abilities` - List of abilities the monster can choose from
+///
+/// # Returns
+///
+/// The chosen [`Ability`] to use this turn.
+///
+/// # Examples
+///
+/// ```
+/// use bevy_wasm_fsharp_ref_logic::*;
+///
+/// let monster = Character {
+///     name: "Goblin".to_string(),
+///     hp: 5,
+///     stats: Stats { hp: 20, attack: 6, defense: 1 },
+/// };
+/// let player = Character::new_player("Hero");
+/// let abilities = vec![
+///     AbilityWithMeta::basic_attack_meta(),
+///     AbilityWithMeta::powerful_attack_meta(),
+///     AbilityWithMeta::heal_meta(),
+/// ];
+///
+/// let chosen = choose_monster_action(&monster, &player, &abilities);
+/// // Monster HP is 5/20 = 25% (< 30%), so AI will choose heal if available
+/// assert_eq!(chosen.name, "Heal");
+/// ```
+pub fn choose_monster_action(
+    monster: &Character,
+    _player: &Character,
+    available_abilities: &[AbilityWithMeta],
+) -> Ability {
+    // Calculate monster's HP percentage
+    let hp_percent = monster.hp as f32 / monster.stats.hp as f32;
+
+    // Filter abilities that are not on cooldown
+    let usable: Vec<&AbilityWithMeta> = available_abilities
+        .iter()
+        .filter(|a| a.current_cooldown == 0)
+        .collect();
+
+    // Defensive strategy: HP < 30%, try to heal
+    if hp_percent < 0.3 {
+        if let Some(heal_ability) = usable.iter().find(|a| a.ability_type == AbilityType::Heal) {
+            return heal_ability.ability.clone();
+        }
+        // No heal available, fall back to basic attack
+        if let Some(basic) = usable
+            .iter()
+            .find(|a| a.ability_type == AbilityType::BasicAttack)
+        {
+            return basic.ability.clone();
+        }
+        // Emergency fallback
+        return Ability::basic_attack();
+    }
+
+    // Aggressive strategy: HP > 70%, use powerful attack
+    if hp_percent > 0.7 {
+        if let Some(powerful) = usable
+            .iter()
+            .find(|a| a.ability_type == AbilityType::PowerfulAttack)
+        {
+            return powerful.ability.clone();
+        }
+        // Powerful attack on cooldown, use basic attack
+        if let Some(basic) = usable
+            .iter()
+            .find(|a| a.ability_type == AbilityType::BasicAttack)
+        {
+            return basic.ability.clone();
+        }
+        // Emergency fallback
+        return Ability::basic_attack();
+    }
+
+    // Balanced strategy: 30% <= HP <= 70%, use basic attack
+    if let Some(basic) = usable
+        .iter()
+        .find(|a| a.ability_type == AbilityType::BasicAttack)
+    {
+        return basic.ability.clone();
+    }
+
+    // Emergency fallback
+    Ability::basic_attack()
 }
 
 #[cfg(test)]
@@ -872,7 +1279,7 @@ mod tests {
     #[test]
     fn test_ability_with_negative_power() {
         let negative_power = Ability {
-            name: "Debuff".into(),
+            name: "Heal".into(),
             power: -5,
         };
 
@@ -881,9 +1288,10 @@ mod tests {
 
         let event = compute_attack(&attacker, &defender, &negative_power);
 
-        // Expected: 10 (attack) + (-5) (ability) - 1 (defense) = 4 damage
-        // But minimum damage is 1, so if result would be < 1, it's clamped to 1
-        assert_eq!(event.damage, 4);
+        // Negative power is treated as healing (bypasses defense)
+        // Damage is -5 (which means +5 HP when applied)
+        assert_eq!(event.damage, -5);
+        assert_eq!(event.defender_hp_after, 25); // 20 - (-5) = 25
     }
 
     #[test]
@@ -1018,6 +1426,7 @@ mod tests {
             defender_name: "Defender".into(),
             damage: 10,
             defender_hp_after: 5,
+            ability_used: "Test Ability".into(),
         };
 
         let cloned = event.clone();
@@ -1026,6 +1435,7 @@ mod tests {
         assert_eq!(event.defender_name, cloned.defender_name);
         assert_eq!(event.damage, cloned.damage);
         assert_eq!(event.defender_hp_after, cloned.defender_hp_after);
+        assert_eq!(event.ability_used, cloned.ability_used);
     }
 
     // ==================== Property-Based Tests ====================
@@ -1127,5 +1537,225 @@ mod tests {
         let expected_damage = (expected_raw - defender.stats.defense).max(1); // (22 - 3).max(1) = 19
 
         assert_eq!(event.damage, expected_damage);
+    }
+
+    // ==================== AI Decision Tests ====================
+
+    #[test]
+    fn test_choose_monster_action_low_hp_chooses_heal() {
+        // Monster at 25% HP should choose heal
+        let monster = Character {
+            name: "Goblin".into(),
+            hp: 5,
+            stats: Stats {
+                hp: 20,
+                attack: 6,
+                defense: 1,
+            },
+        };
+        let player = Character::new_player("Hero");
+        let abilities = vec![
+            AbilityWithMeta::basic_attack_meta(),
+            AbilityWithMeta::powerful_attack_meta(),
+            AbilityWithMeta::heal_meta(),
+        ];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        assert_eq!(chosen.name, "Heal");
+    }
+
+    #[test]
+    fn test_choose_monster_action_high_hp_chooses_powerful() {
+        // Monster at 100% HP should choose powerful attack
+        let monster = Character::new_monster("Slime");
+        let player = Character::new_player("Hero");
+        let abilities = vec![
+            AbilityWithMeta::basic_attack_meta(),
+            AbilityWithMeta::powerful_attack_meta(),
+            AbilityWithMeta::heal_meta(),
+        ];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        assert_eq!(chosen.name, "Powerful Attack");
+    }
+
+    #[test]
+    fn test_choose_monster_action_medium_hp_chooses_basic() {
+        // Monster at 50% HP should choose basic attack
+        let monster = Character {
+            name: "Goblin".into(),
+            hp: 10,
+            stats: Stats {
+                hp: 20,
+                attack: 6,
+                defense: 1,
+            },
+        };
+        let player = Character::new_player("Hero");
+        let abilities = vec![
+            AbilityWithMeta::basic_attack_meta(),
+            AbilityWithMeta::powerful_attack_meta(),
+            AbilityWithMeta::heal_meta(),
+        ];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        assert_eq!(chosen.name, "Basic Attack");
+    }
+
+    #[test]
+    fn test_choose_monster_action_heal_on_cooldown_falls_back() {
+        // Monster at 25% HP with heal on cooldown should fall back to basic
+        let monster = Character {
+            name: "Goblin".into(),
+            hp: 5,
+            stats: Stats {
+                hp: 20,
+                attack: 6,
+                defense: 1,
+            },
+        };
+        let player = Character::new_player("Hero");
+        let mut heal_ability = AbilityWithMeta::heal_meta();
+        heal_ability.current_cooldown = 2; // On cooldown
+        let abilities = vec![
+            AbilityWithMeta::basic_attack_meta(),
+            AbilityWithMeta::powerful_attack_meta(),
+            heal_ability,
+        ];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        assert_eq!(chosen.name, "Basic Attack");
+    }
+
+    #[test]
+    fn test_choose_monster_action_powerful_on_cooldown_falls_back() {
+        // Monster at 100% HP with powerful on cooldown should fall back to basic
+        let monster = Character::new_monster("Slime");
+        let player = Character::new_player("Hero");
+        let mut powerful_ability = AbilityWithMeta::powerful_attack_meta();
+        powerful_ability.current_cooldown = 1; // On cooldown
+        let abilities = vec![
+            AbilityWithMeta::basic_attack_meta(),
+            powerful_ability,
+            AbilityWithMeta::heal_meta(),
+        ];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        assert_eq!(chosen.name, "Basic Attack");
+    }
+
+    #[test]
+    fn test_choose_monster_action_empty_abilities_uses_fallback() {
+        // Even with no abilities, should return basic attack fallback
+        let monster = Character::new_monster("Slime");
+        let player = Character::new_player("Hero");
+        let abilities: Vec<AbilityWithMeta> = vec![];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        assert_eq!(chosen.name, "Basic Attack");
+        assert_eq!(chosen.power, 5);
+    }
+
+    #[test]
+    fn test_choose_monster_action_all_on_cooldown_uses_fallback() {
+        // All abilities on cooldown should use emergency fallback
+        let monster = Character::new_monster("Slime");
+        let player = Character::new_player("Hero");
+        let mut basic = AbilityWithMeta::basic_attack_meta();
+        basic.current_cooldown = 1;
+        let mut powerful = AbilityWithMeta::powerful_attack_meta();
+        powerful.current_cooldown = 2;
+        let mut heal = AbilityWithMeta::heal_meta();
+        heal.current_cooldown = 3;
+        let abilities = vec![basic, powerful, heal];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        assert_eq!(chosen.name, "Basic Attack");
+    }
+
+    #[test]
+    fn test_choose_monster_action_boundary_30_percent() {
+        // Monster at exactly 30% HP should NOT choose heal (not < 30%)
+        let monster = Character {
+            name: "Goblin".into(),
+            hp: 6, // 6/20 = 30%
+            stats: Stats {
+                hp: 20,
+                attack: 6,
+                defense: 1,
+            },
+        };
+        let player = Character::new_player("Hero");
+        let abilities = vec![
+            AbilityWithMeta::basic_attack_meta(),
+            AbilityWithMeta::powerful_attack_meta(),
+            AbilityWithMeta::heal_meta(),
+        ];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        // At exactly 30%, should use basic (not heal)
+        assert_eq!(chosen.name, "Basic Attack");
+    }
+
+    #[test]
+    fn test_choose_monster_action_boundary_70_percent() {
+        // Monster at exactly 70% HP should NOT choose powerful (not > 70%)
+        let monster = Character {
+            name: "Goblin".into(),
+            hp: 14, // 14/20 = 70%
+            stats: Stats {
+                hp: 20,
+                attack: 6,
+                defense: 1,
+            },
+        };
+        let player = Character::new_player("Hero");
+        let abilities = vec![
+            AbilityWithMeta::basic_attack_meta(),
+            AbilityWithMeta::powerful_attack_meta(),
+            AbilityWithMeta::heal_meta(),
+        ];
+
+        let chosen = choose_monster_action(&monster, &player, &abilities);
+
+        // At exactly 70%, should use basic (not powerful)
+        assert_eq!(chosen.name, "Basic Attack");
+    }
+
+    #[test]
+    fn test_ability_with_meta_is_ready() {
+        let mut ability = AbilityWithMeta::powerful_attack_meta();
+
+        assert!(ability.is_ready());
+
+        ability.activate();
+        assert!(!ability.is_ready());
+        assert_eq!(ability.current_cooldown, 3);
+
+        ability.tick_cooldown();
+        assert_eq!(ability.current_cooldown, 2);
+        assert!(!ability.is_ready());
+
+        ability.tick_cooldown();
+        ability.tick_cooldown();
+        assert_eq!(ability.current_cooldown, 0);
+        assert!(ability.is_ready());
+    }
+
+    #[test]
+    fn test_ability_with_meta_tick_does_not_go_negative() {
+        let mut ability = AbilityWithMeta::basic_attack_meta();
+
+        assert_eq!(ability.current_cooldown, 0);
+        ability.tick_cooldown();
+        assert_eq!(ability.current_cooldown, 0); // Should not go negative
     }
 }
