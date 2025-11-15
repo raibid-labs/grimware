@@ -26,6 +26,7 @@
 //! This functional approach aligns perfectly with F# → Rust transpilation.
 
 use bevy_wasm_fsharp_ref_logic::{Ability, Character, compute_attack};
+use std::io::{self, Write};
 
 /// AI Strategy trait - defines how an AI makes decisions
 trait AiStrategy {
@@ -231,12 +232,14 @@ fn main() {
     println!("  • Defensive: Focuses on survival, heals when low HP");
     println!("  • Balanced: Adapts based on opponent's HP percentage");
     println!("  • Smart: Considers multiple factors (HP, defense, state)");
+    io::stdout().flush().unwrap();
 
     // ====================
     // Section 2: Single Combat Demo
     // ====================
 
     println!("\n=== 2. Detailed Combat Demo ===");
+    io::stdout().flush().unwrap();
 
     let fighter1 = Character::new_player("Warrior");
     let fighter2 = Character::new_monster("Goblin");
@@ -252,6 +255,7 @@ fn main() {
 
     println!("\n=== 3. AI Strategy Tournament ===\n");
     println!("Testing each AI strategy against all others (best of 5):\n");
+    io::stdout().flush().unwrap();
 
     let strategies: Vec<(&str, Box<dyn AiStrategy>)> = vec![
         ("Aggressive", Box::new(AggressiveAi)),
@@ -300,6 +304,7 @@ fn main() {
                 println!("✓ {} wins {}-{}", strategy2.0, strategy2_wins, strategy1_wins);
                 wins[j] += 1;
             }
+            io::stdout().flush().unwrap();
         }
     }
 
