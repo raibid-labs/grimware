@@ -33,6 +33,29 @@ run:
 run-release:
     cargo run -p app --release
 
+# Run AI demo showing 4 AI personalities in tournament
+demo-ai:
+    cargo run --example ai_behavior
+
+# Run minimal combat example (console only)
+demo-minimal:
+    cargo run --example minimal_combat
+
+# Run custom abilities example
+demo-abilities:
+    cargo run --example custom_abilities
+
+# Run F# integration walkthrough
+demo-fsharp:
+    cargo run --example fsharp_integration
+
+# Run headless simulation (1000 games)
+demo-simulation:
+    cargo run --example headless_simulation
+
+# Run all demos in sequence
+demo-all: demo-minimal demo-abilities demo-ai demo-fsharp demo-simulation
+
 # Run all tests
 test:
     cargo test --all
